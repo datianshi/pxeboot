@@ -1,3 +1,5 @@
+github.com/gorilla/mux v1.7.4 h1:VuZ8uybHlWmqV03+zRzdwKL4tUnIp1MAQtp1mIFE1bc=
+github.com/gorilla/mux v1.7.4/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
 github.com/insomniacslk/dhcp v0.0.0-20200806210722-3f14f7f8bd9c h1:sGjF7j2eY9V0tCvP2s2tZVoM/9f/I9RYdEtv3qLrtMk=
 github.com/insomniacslk/dhcp v0.0.0-20200806210722-3f14f7f8bd9c/go.mod h1:CfMdguCK66I5DAUJgGKyNz8aB6vO5dZzkm9Xep6WGvw=
 github.com/pin/tftp v2.1.0+incompatible h1:Yng4J7jv6lOc6IF4XoB5mnd3P7ZrF60XQq+my3FAMus=
