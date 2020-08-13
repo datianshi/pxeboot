@@ -5,19 +5,24 @@ import (
 )
 
 var data = `
+dhcp_interface: ens224
 bind_ip: 172.16.100.2	
 gateway: 10.65.101.1
 netmask: 255.255.255.0
 dns: 10.192.2.10
 nics:
   00-50-56-82-70-2a:
-    dhcp_ip: 172.16.102.100
-    ip: 10.65.102.2
+    dhcp_ip: 172.16.100.100
+    ip: 10.65.101.10
     hostname: vc-01.example.org
-  00-50-56-82-60-2a:
-    dhcp_ip: 172.16.102.101
-    ip: 10.65.102.3  
+  00-50-56-82-61-7c:
+    dhcp_ip: 172.16.100.101
+    ip: 10.65.101.11  
     hostname: vc-02.example.org
+  00-50-56-82-d8-86:
+    dhcp_ip: 172.16.100.102
+    ip: 10.65.101.12
+    hostname: vc-03.example.org
 boot_file: efi/boot/bootx64.efi
 lease_time: 500
 root_path: /home/ubuntu/images
@@ -39,6 +44,7 @@ type Config struct {
 	BootFile string `yaml:"boot_file"`
 	LeaseTime int `yaml:"lease_time"`
 	RootPath string `yaml:"root_path"`
+	DHCPInterface string `yaml:"dhcp_interface"`
 }
 
 func LoadConfig() (*Config, error){

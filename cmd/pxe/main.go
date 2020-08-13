@@ -12,6 +12,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 func main() {
@@ -23,14 +24,14 @@ func main() {
 
 	//Create directories for each nic
 	for k, _ := range cfg.Nics {
-		//$root_path/nic_mac_address
-		serverDir := fmt.Sprintf("%s/%s", cfg.RootPath, k)
+		//$root_path/01-nic_mac_address
+		serverDir := fmt.Sprintf("%s/01-%s", cfg.RootPath, k)
 		err = os.Mkdir(serverDir, 0755)
 		if err != nil {
 			log.Println(err)
 		}
-		//$root_path/nic_mac_address/images symlink -> $root_path
-		err = os.Symlink(cfg.RootPath, fmt.Sprintf("%s/%s", serverDir, util.SYMLINK_PER_SERVER_DIR))
+		//$root_path/01-nic_mac_address/images symlink -> $root_path
+		//01 means ethernet
 		_ , err := os.Create(fmt.Sprintf("%s/boot.cfg", serverDir))
 		if err != nil {
 			log.Println(err)
@@ -40,8 +41,7 @@ func main() {
 			log.Println(err)
 		}
 		fileRead, err := os.Open(fmt.Sprintf("%s/efi/boot/boot.cfg", cfg.RootPath))
-		kickstartUrl := fmt.Sprintf("http://%s/kickstart/%s/ks.cfg", cfg.BindIP, k)
-		util.BootConfigFile(fileRead, fileWrite, kickstartUrl)
+		util.BootConfigFile(fileRead, fileWrite, cfg.BindIP, k)
 		err = fileWrite.Close()
 		if err != nil {
 			log.Println(err)
@@ -70,13 +70,17 @@ func main() {
 		<-c
 		log.Println("clean shutdown")
 		for k, _ := range cfg.Nics {
-			os.RemoveAll(fmt.Sprintf("%s/%s", cfg.RootPath, k))
+			os.RemoveAll(fmt.Sprintf("%s/01-%s", cfg.RootPath, k))
 		}
 		os.Exit(1)
 	}()
 
 	//Start dhcp server and block
-	dhcp.Start(cfg)
+	go func() {
+		dhcp.Start(cfg)
+	}()
+
+	time.Sleep(1000 * time.Second)
 
 
 }

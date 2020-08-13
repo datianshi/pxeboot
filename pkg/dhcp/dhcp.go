@@ -29,8 +29,9 @@ func handleDHCP(cfg *config.Config) server4.Handler {
 		ret, _ := dhcpv4.New(
 			dhcpv4.WithReply(m),
 			dhcpv4.WithNetmask(net.IPv4Mask(255, 255, 255, 0)),
+			dhcpv4.WithServerIP(net.ParseIP(cfg.BindIP)),
 			dhcpv4.WithLeaseTime(uint32(cfg.LeaseTime)),
-			dhcpv4.WithYourIP(net.ParseIP(serverConfig.Ip)),
+			dhcpv4.WithYourIP(net.ParseIP(serverConfig.DhcpIp)),
 		)
 		//TFTP Server
 		ret.Options[66] = []byte(cfg.BindIP)
@@ -43,13 +44,14 @@ func handleDHCP(cfg *config.Config) server4.Handler {
 }
 func Start(cfg *config.Config) {
 	laddr := net.UDPAddr{
-		IP:   net.ParseIP(cfg.BindIP),
+		IP:   net.ParseIP("0.0.0.0"),
 		Port: 67,
 	}
-	server, err := server4.NewServer("ens224", &laddr, handleDHCP(cfg))
+	server, err := server4.NewServer(cfg.DHCPInterface, &laddr, handleDHCP(cfg))
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println(cfg.DHCPInterface)
 	// This never returns. If you want to do other stuff, dump it into a
 	// goroutine.
 	server.Serve()
