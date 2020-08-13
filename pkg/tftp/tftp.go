@@ -2,17 +2,17 @@ package tftp
 
 import (
 	"fmt"
-	"io"
+	"github.com/datianshi/pxeboot/pkg/config"
 	"github.com/pin/tftp"
+	"io"
 	"os"
 	"time"
 )
 
 
 // readHandler is called when client starts file download from server
-var root_path = "/netboot/tftp/"
 func readHandler(filename string, rf io.ReaderFrom) error {
-	file, err := os.Open(fmt.Sprintf("%s/%s", root_path, filename))
+	file, err := os.Open(filename)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		return err
@@ -28,7 +28,7 @@ func readHandler(filename string, rf io.ReaderFrom) error {
 
 // writeHandler is called when client starts file upload to server
 func writeHandler(filename string, wt io.WriterTo) error {
-	file, err := os.OpenFile(fmt.Sprintf("%s/%s", root_path, filename), os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
+	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		return err
@@ -42,13 +42,27 @@ func writeHandler(filename string, wt io.WriterTo) error {
 	return nil
 }
 
-func Start() {
-	// use nil in place of handler to disable read or write operations
-	s := tftp.NewServer(readHandler, writeHandler)
-	s.SetTimeout(5 * time.Second) // optional
-	err := s.ListenAndServe("172.16.100.2:69") // blocks until s.Shutdown() is called
+func rootPathReadHandler(rootPath string) func(filename string, rf io.ReaderFrom) error {
+	return func(filename string, rf io.ReaderFrom) error{
+		return readHandler(fmt.Sprintf("%s/%s", rootPath, filename), rf)
+	}
+}
+
+func rootPathWriteHandler(rootPath string) func(filename string, rf io.WriterTo) error {
+	return func(filename string, rf io.WriterTo) error{
+		return writeHandler(fmt.Sprintf("%s/%s", rootPath, filename), rf)
+	}
+}
+
+
+
+func Start(cfg *config.Config) {
+	s := tftp.NewServer(rootPathReadHandler(cfg.RootPath), rootPathWriteHandler(cfg.RootPath))
+	s.SetTimeout(5 * time.Second)
+	err := s.ListenAndServe(fmt.Sprintf("%s:69", cfg.BindIP))
 	if err != nil {
 		fmt.Fprintf(os.Stdout, "server: %v\n", err)
 		os.Exit(1)
 	}
+
 }
