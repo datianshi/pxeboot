@@ -34,6 +34,7 @@ nics:
 boot_file: efi/boot/bootx64.efi
 lease_time: 500
 root_path: /home/ubuntu/images
+boot_config_file: efi/boot/boot.cfg
 ntp_server: time.svc.pivotal.io
 `
 
@@ -54,6 +55,7 @@ type Config struct {
 	RootPath string `yaml:"root_path"`
 	DHCPInterface string `yaml:"dhcp_interface"`
 	Password string `yaml:"password"`
+	BootConfigFile string `yaml:"boot_config_file"`
 }
 
 func LoadConfig(reader io.Reader) (*Config, error){
