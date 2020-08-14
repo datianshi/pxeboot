@@ -44,7 +44,7 @@ kickstart_template: |
     clearpart --overwritevmfs --alldrives
 
     # Set the root password for the DCUI and Tech Support Mode
-    rootpw VMware1!
+    rootpw {{.Password}}
 
     # Install on the first local disk available on machine
     install --firstdisk --overwritevmfs

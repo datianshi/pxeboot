@@ -24,6 +24,7 @@ type info struct {
 	NameServer string
 	HostName string
 	NTPServer string
+	Password string
 }
 
 func (k *Kickstart) handler() http.HandlerFunc{
@@ -42,6 +43,7 @@ func (k *Kickstart) handler() http.HandlerFunc{
 			NetMask: k.C.Netmask,
 			NameServer: k.C.DNS,
 			NTPServer: k.C.NTPServer,
+			Password: k.C.Password,
 		}
 		t, _:= template.New("").Parse(k.C.KickStartTemplate)
 		err := t.ExecuteTemplate(w, "", i)

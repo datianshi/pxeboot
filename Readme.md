@@ -65,7 +65,7 @@ kickstart_template: |
     clearpart --overwritevmfs --alldrives
 
     # Set the root password for the DCUI and Tech Support Mode
-    rootpw VMware1!
+    rootpw {{.Password}}
 
     # Install on the first local disk available on machine
     install --firstdisk --overwritevmfs
@@ -93,4 +93,4 @@ kickstart_template: |
 
 ```go run cmd/pxe/main.go -config pxe.yaml``` 
 
-## A lot of future work :)
+## A lot of future work :) Foundation exist !~ 
