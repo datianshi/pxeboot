@@ -51,8 +51,5 @@ func Start(cfg *config.Config) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(cfg.DHCPInterface)
-	// This never returns. If you want to do other stuff, dump it into a
-	// goroutine.
 	server.Serve()
 }

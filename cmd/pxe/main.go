@@ -10,7 +10,6 @@ import (
 	"github.com/gorilla/mux"
 	"log"
 	"os"
-	"time"
 )
 
 func main() {
@@ -49,11 +48,5 @@ func main() {
 	}()
 
 	//Start dhcp server and block
-	go func() {
-		dhcp.Start(cfg)
-	}()
-
-	time.Sleep(1000 * time.Second)
-
-
+	dhcp.Start(cfg)
 }

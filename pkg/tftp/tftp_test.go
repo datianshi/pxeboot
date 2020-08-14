@@ -29,7 +29,7 @@ ntp_server: time.svc.pivotal.io
 boot_config_file: efi/boot/boot.cfg
 `
 
-func TestReadFile(t *testing.T) {
+func TestReadBootConfigFile(t *testing.T) {
 	var buf bytes.Buffer
 	buf.WriteString(data)
 	config, err := config.LoadConfig(&buf)
@@ -56,4 +56,25 @@ updated=0
 	if strings.Compare(real, expected) != 0 {
 		t.Errorf("%s\n not equal to %s\n", real, expected)
 	}
+}
+
+func TestReadRegularFile(t *testing.T) {
+	var buf bytes.Buffer
+	buf.WriteString(data)
+	config, err := config.LoadConfig(&buf)
+	if err != nil {
+		t.Errorf("Can not process the config")
+	}
+
+	fileName := "afile"
+
+	var remoteBuf bytes.Buffer
+	pxeReadHandler(config)(fileName, &remoteBuf)
+
+	real := remoteBuf.String()
+	expected := `this is a file`
+	if strings.Compare(real, expected) != 0 {
+		t.Errorf("%s\n not equal to %s\n", real, expected)
+	}
+
 }

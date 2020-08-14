@@ -14,22 +14,6 @@ import (
 )
 
 
-// readHandler is called when client starts file download from server
-func readHandler(filename string, rf io.ReaderFrom) error {
-	file, err := os.Open(filename)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		return err
-	}
-	n, err := rf.ReadFrom(file)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "%v\n", err)
-		return err
-	}
-	fmt.Printf("%d bytes sent\n", n)
-	return nil
-}
-
 // writeHandler is called when client starts file upload to server
 func writeHandler(filename string, wt io.WriterTo) error {
 	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
@@ -46,6 +30,16 @@ func writeHandler(filename string, wt io.WriterTo) error {
 	return nil
 }
 
+type hackReader struct {
+	bytes.Buffer
+	size int64
+}
+
+//hack to match Seek interface. TFTP server library has a type cast
+func (reader *hackReader) Seek(offset int64, whence int) (int64, error) {
+	return reader.size, nil
+}
+
 func pxeReadHandler(cfg *config.Config) func(filename string, rf io.ReaderFrom) error {
 		//Not read from the file. Generate it dynamically
 		return func(filename string, rf io.ReaderFrom) error{
@@ -58,54 +52,54 @@ func pxeReadHandler(cfg *config.Config) func(filename string, rf io.ReaderFrom) 
 					fmt.Fprintf(os.Stderr, "Can not generate boot config %s", err)
 				}
 			} else {
-				r, err = os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
+				r, err = os.Open(fmt.Sprintf("%s/%s", cfg.RootPath, filename))
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "%v\n", err)
 					return err
 				}
 			}
-			n, err := rf.ReadFrom(r)
+			_, err = rf.ReadFrom(r)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "%v\n", err)
+				//fmt.Fprintf(os.Stderr, "%v\n", err)
 				return err
 			}
-			fmt.Printf("%d bytes sent\n", n)
+			//fmt.Printf("%d bytes sent\n", n)
 			return nil
 		}
 	}
 
 	//Generate our own boot config file
-	func bootConfig(cfg *config.Config, nic string) (io.Reader, error){
-		fmt.Println(fmt.Sprintf("%s/%s", cfg.RootPath, cfg.BootConfigFile))
+	func bootConfig(cfg *config.Config, nic string) (*hackReader, error){
+		//fmt.Println(fmt.Sprintf("%s/%s", cfg.RootPath, cfg.BootConfigFile))
 		origin_template, err:= os.Open(fmt.Sprintf("%s/%s", cfg.RootPath, cfg.BootConfigFile))
 		if err != nil {
 			return nil, err
 		}
 		var buf bytes.Buffer
 		kickstartUrl := fmt.Sprintf("http://%s/kickstart/%s/ks.cfg", cfg.BindIP, nic)
-		//prefix := fmt.Sprintf("01-%s/%s", nic, SYMLINK_PER_SERVER_DIR)
 		scanner := bufio.NewScanner(origin_template)
+		s := 0
 		for scanner.Scan() {
 			line := scanner.Text()
 			if strings.Contains(line, "kernelopt=") {
 				re := regexp.MustCompile(`^(kernelopt=).*$`)
 				t := re.ReplaceAllString(line, fmt.Sprintf("${1}ks=%s", kickstartUrl))
-				_, err := buf.Write([]byte(fmt.Sprintf("%s\n", t)))
+				write, err := buf.Write([]byte(fmt.Sprintf("%s\n", t)))
+				s = s + write
 				if err != nil {
 					return nil, err
 				}
 			} else {
-			//} else if strings.Contains(line, "prefix=") {
-			//	re := regexp.MustCompile(`^(prefix=).*$`)
-			//	t := re.ReplaceAllString(line, fmt.Sprintf("${1}%s", prefix))
-			//	//fmt.Println(t)
-			//	dst.Write([]byte(fmt.Sprintf("%s\n", t)))
-			//} else {
-				buf.Write([]byte(fmt.Sprintf("%s\n", line)))
+				write, _ := buf.Write([]byte(fmt.Sprintf("%s\n", line)))
+				s = s + write
 			}
 
 		}
-		return &buf, nil
+		ret := &hackReader{
+			buf,
+			int64(s),
+		}
+		return ret, nil
 	}
 
 	func getNic(filename string, cfg *config.Config) (bool, string) {
@@ -119,6 +113,7 @@ func pxeReadHandler(cfg *config.Config) func(filename string, rf io.ReaderFrom) 
 
 func pxeWriteHandler(cfg *config.Config) func(filename string, rf io.WriterTo) error {
 	return func(filename string, rf io.WriterTo) error{
+		fmt.Printf("Write File %s\n", filename)
 		return writeHandler(fmt.Sprintf("%s/%s", cfg.RootPath, filename), rf)
 	}
 }
