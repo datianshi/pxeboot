@@ -50,6 +50,7 @@ type Config struct {
 	DHCPInterface string `yaml:"dhcp_interface"`
 	Password string `yaml:"password"`
 	BootConfigFile string `yaml:"boot_config_file"`
+	KickStartTemplate string `yaml:"kickstart_template"`
 }
 
 func LoadConfig(reader io.Reader) (*Config, error){

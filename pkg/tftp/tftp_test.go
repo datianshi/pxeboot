@@ -32,7 +32,7 @@ boot_config_file: efi/boot/boot.cfg
 func TestReadBootConfigFile(t *testing.T) {
 	var buf bytes.Buffer
 	buf.WriteString(data)
-	config, err := config.LoadConfig(&buf)
+	cfg, err := config.LoadConfig(&buf)
 	if err != nil {
 		t.Errorf("Can not process the config")
 	}
@@ -40,7 +40,7 @@ func TestReadBootConfigFile(t *testing.T) {
 	fileName := "/10-00-50-56-82-70-2a/boot.cfg"
 
 	var remoteBuf bytes.Buffer
-	pxeReadHandler(config)(fileName, &remoteBuf)
+	pxeReadHandler(cfg)(fileName, &remoteBuf)
 
 	real := remoteBuf.String()
 	expected := `bootstate=0
@@ -61,7 +61,7 @@ updated=0
 func TestReadRegularFile(t *testing.T) {
 	var buf bytes.Buffer
 	buf.WriteString(data)
-	config, err := config.LoadConfig(&buf)
+	cfg, err := config.LoadConfig(&buf)
 	if err != nil {
 		t.Errorf("Can not process the config")
 	}
@@ -69,7 +69,7 @@ func TestReadRegularFile(t *testing.T) {
 	fileName := "afile"
 
 	var remoteBuf bytes.Buffer
-	pxeReadHandler(config)(fileName, &remoteBuf)
+	pxeReadHandler(cfg)(fileName, &remoteBuf)
 
 	real := remoteBuf.String()
 	expected := `this is a file`
