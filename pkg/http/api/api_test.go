@@ -61,6 +61,37 @@ func TestUpdateNicConfig(t *testing.T) {
 
 }
 
+func TestDeleteNicConfig(t *testing.T) {
+	router, cfg, a := setupAPI(t)
+	router.HandleFunc("/api/conf/nic/{mac_address}", a.DeleteNic()).Methods("DELETE")
+	r, _ := http.NewRequest("DELETE", "/api/conf/nic/00-50-56-82-70-2a", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, r)
+
+	if w.Result().StatusCode != http.StatusAccepted {
+		t.Errorf("Expected the http status code %d, but got %d", http.StatusAccepted, w.Result().StatusCode)
+	}
+	_, found := cfg.Nics["00-50-56-82-70-2a"]
+	if found {
+		t.Errorf("Expect %s nic config is deleted", "00-50-56-82-70-2a")
+	}
+}
+
+func TestDeleteAllNics(t *testing.T) {
+	router, cfg, a := setupAPI(t)
+	router.HandleFunc("/api/conf/deletenics", a.DeleteAllNics()).Methods("DELETE")
+	r, _ := http.NewRequest("DELETE", "/api/conf/deletenics", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, r)
+
+	if w.Result().StatusCode != http.StatusAccepted {
+		t.Errorf("Expected the http status code %d, but got %d", http.StatusAccepted, w.Result().StatusCode)
+	}
+	if len(cfg.Nics) != 0 {
+		t.Errorf("Expect to have 0 Nics in config")
+	}
+}
+
 func TestCreateNicConfig(t *testing.T) {
 	requestBody := `
 {
@@ -85,6 +116,7 @@ func TestCreateNicConfig(t *testing.T) {
 		t.Errorf("New nic config is not created")
 	}
 }
+
 
 func setupAPI(t *testing.T) (*mux.Router, *config.Config, *api.API) {
 	router := mux.NewRouter()

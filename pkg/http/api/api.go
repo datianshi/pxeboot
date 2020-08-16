@@ -52,6 +52,8 @@ func (a *API) Start() {
 	}
 	a.r.HandleFunc("/api/conf", a.GetConfigHandler())
 	a.r.HandleFunc("/api/conf/nic/{mac_address}", a.UpdateNicConfig()).Methods("PUT")
+	a.r.HandleFunc("/api/conf/nic/{mac_address}", a.DeleteNic()).Methods("DELETE")
+	a.r.HandleFunc("/api/conf/deletenics", a.DeleteAllNics()).Methods("DELETE")
 	a.r.HandleFunc("/api/conf/nic", a.CreateNicConfig()).Methods("POST")
 	if err := RegisterUITemplate(a.r); err != nil {
 		log.Fatal(err)
@@ -100,6 +102,29 @@ func (api *API) UpdateNicConfig() http.HandlerFunc {
 			api.cfg.Nics[mac_address] = serverConfig
 			w.WriteHeader(http.StatusAccepted)
 		}
+	}
+}
+
+func (api *API) DeleteNic() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		mac_address := vars["mac_address"]
+		_ , found := api.cfg.Nics[mac_address]
+		if !found {
+			w.WriteHeader(422) // unprocessable entity
+			w.Write([]byte(fmt.Sprintf("nic %s does not exists", mac_address)))
+			panic(errors.New(fmt.Sprintf("nic %s does not exists", mac_address)))
+		} else {
+			delete(api.cfg.Nics, mac_address)
+			w.WriteHeader(http.StatusAccepted)
+		}
+	}
+}
+
+func (api *API) DeleteAllNics() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		api.cfg.Nics = map[string]config.ServerConfig{}
+		w.WriteHeader(http.StatusAccepted)
 	}
 }
 
