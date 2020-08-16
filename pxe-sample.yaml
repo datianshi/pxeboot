@@ -3,13 +3,13 @@ dhcp_interface: vboxnet5
 #DHCP Server IP
 bind_ip: 192.168.99.1
 #Default same ip as DHCP Server IP
-#management_ip: 192.168.62.1
+management_ip: 192.168.62.1
 #Default 67
-#dhcp_port: 10000
+dhcp_server_port: 10000
 #Default 69
-#tftp_port: 10001
+tftp_server_port: 10001
 #Default 80
-#http_port: 8089
+http_port: 8089
 #ESXi Servers Gateway
 gateway: 10.65.101.1
 #ESXi Servers Netmask

@@ -40,19 +40,12 @@ func TestUpdateNicConfig(t *testing.T) {
 	"dhcp_ip": "172.16.100.102",
 	"hostname": "test-host"
 }`
-	router := mux.NewRouter()
-	var buf bytes.Buffer
-	buf.WriteString(data)
-	cfg, err := config.LoadConfig(&buf)
-	if err != nil {
-		t.Fatalf("Can not process the config %v", err)
-	}
-	a := api.NewAPI(cfg)
+	router, cfg, a := setupAPI(t)
 	router.HandleFunc("/api/conf/nic/{mac_address}", a.UpdateNicConfig()).Methods("PUT")
-	r, err := http.NewRequest("PUT", "/api/conf/nic/00-50-56-82-70-2a", bytes.NewBufferString(requestBody))
+	r, _ := http.NewRequest("PUT", "/api/conf/nic/00-50-56-82-70-2a", bytes.NewBufferString(requestBody))
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, r)
-	ret, err := ioutil.ReadAll(w.Result().Body)
+	ret, _ := ioutil.ReadAll(w.Result().Body)
 	fmt.Println(string(ret))
 
 	if w.Result().StatusCode != http.StatusAccepted {
@@ -78,16 +71,9 @@ func TestCreateNicConfig(t *testing.T) {
 	"hostname": "test-host" 
 }
 `
-	router := mux.NewRouter()
-	var buf bytes.Buffer
-	buf.WriteString(data)
-	cfg, err := config.LoadConfig(&buf)
-	if err != nil {
-		t.Fatalf("Can not process the config %v", err)
-	}
-	a := api.NewAPI(cfg)
+	router, cfg, a := setupAPI(t)
 	router.HandleFunc("/api/conf/nic", a.CreateNicConfig()).Methods("POST")
-	r, err := http.NewRequest("POST", "/api/conf/nic", bytes.NewBufferString(requestBody))
+	r, _ := http.NewRequest("POST", "/api/conf/nic", bytes.NewBufferString(requestBody))
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, r)
 
@@ -98,4 +84,16 @@ func TestCreateNicConfig(t *testing.T) {
 	if !found {
 		t.Errorf("New nic config is not created")
 	}
+}
+
+func setupAPI(t *testing.T) (*mux.Router, *config.Config, *api.API) {
+	router := mux.NewRouter()
+	var buf bytes.Buffer
+	buf.WriteString(data)
+	cfg, err := config.LoadConfig(&buf)
+	if err != nil {
+		t.Fatalf("Can not process the config %v", err)
+	}
+	a := api.NewAPI(cfg)
+	return router, cfg, a
 }
