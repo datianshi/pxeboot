@@ -51,6 +51,8 @@ func (a *API) Start() {
 		Handler: a.r, // Pass our instance of gorilla/mux in.
 	}
 	a.r.HandleFunc("/api/conf", a.GetConfigHandler())
+	a.r.HandleFunc("/api/conf/nics", a.GetNics())
+	a.r.HandleFunc("/api/conf/nic/{mac_address}", a.GetNic())
 	a.r.HandleFunc("/api/conf/nic/{mac_address}", a.UpdateNicConfig()).Methods("PUT")
 	a.r.HandleFunc("/api/conf/nic/{mac_address}", a.DeleteNic()).Methods("DELETE")
 	a.r.HandleFunc("/api/conf/deletenics", a.DeleteAllNics()).Methods("DELETE")
@@ -73,6 +75,58 @@ func (api *API) GetConfigHandler() http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(js)
 	}
+}
+
+func (api *API) GetNics() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		js, err := json.Marshal(convertToServerItems(api.cfg.Nics))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(js)
+	}
+}
+
+func (api *API) GetNic() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var serverConfig config.ServerConfig
+		vars := mux.Vars(r)
+		mac_address := vars["mac_address"]
+		serverConfig , found := api.cfg.Nics[mac_address]
+		if !found {
+			w.WriteHeader(404) // unprocessable entity
+			w.Write([]byte(fmt.Sprintf("nic %s does not exists", mac_address)))
+		}
+		item := ServerItem{
+			serverConfig.Ip,
+			serverConfig.DhcpIp,
+			serverConfig.Hostname,
+			mac_address,
+		}
+		js, err := json.Marshal(item)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(js)
+	}
+}
+
+func convertToServerItems(nics map[string]config.ServerConfig) []ServerItem {
+	var items []ServerItem
+	for k,v := range nics {
+		item := ServerItem{
+			v.Ip,
+			v.DhcpIp,
+			v.Hostname,
+			k,
+		}
+		items = append(items, item)
+	}
+	return items
 }
 
 
