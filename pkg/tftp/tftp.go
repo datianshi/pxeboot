@@ -68,48 +68,48 @@ func pxeReadHandler(cfg *config.Config) func(filename string, rf io.ReaderFrom) 
 		}
 	}
 
-	//Generate our own boot config file
-	func bootConfig(cfg *config.Config, nic string) (*hackReader, error){
-		//fmt.Println(fmt.Sprintf("%s/%s", cfg.RootPath, cfg.BootConfigFile))
-		origin_template, err:= os.Open(fmt.Sprintf("%s/%s", cfg.RootPath, cfg.BootConfigFile))
-		if err != nil {
-			return nil, err
-		}
-		var buf bytes.Buffer
-		kickstartUrl := fmt.Sprintf("http://%s/kickstart/%s/ks.cfg", cfg.BindIP, nic)
-		scanner := bufio.NewScanner(origin_template)
-		s := 0
-		for scanner.Scan() {
-			line := scanner.Text()
-			if strings.Contains(line, "kernelopt=") {
-				re := regexp.MustCompile(`^(kernelopt=).*$`)
-				t := re.ReplaceAllString(line, fmt.Sprintf("${1}ks=%s", kickstartUrl))
-				write, err := buf.Write([]byte(fmt.Sprintf("%s\n", t)))
-				s = s + write
-				if err != nil {
-					return nil, err
-				}
-			} else {
-				write, _ := buf.Write([]byte(fmt.Sprintf("%s\n", line)))
-				s = s + write
-			}
-
-		}
-		ret := &hackReader{
-			buf,
-			int64(s),
-		}
-		return ret, nil
+//Generate our own boot config file
+func bootConfig(cfg *config.Config, nic string) (*hackReader, error){
+	//fmt.Println(fmt.Sprintf("%s/%s", cfg.RootPath, cfg.BootConfigFile))
+	origin_template, err:= os.Open(fmt.Sprintf("%s/%s", cfg.RootPath, cfg.BootConfigFile))
+	if err != nil {
+		return nil, err
 	}
-
-	func getNic(filename string, cfg *config.Config) (bool, string) {
-		for k, _ := range cfg.Nics {
-			if strings.Contains(filename, k) {
-				return true, k
+	var buf bytes.Buffer
+	kickstartUrl := fmt.Sprintf("http://%s/kickstart/%s/ks.cfg", cfg.BindIP, nic)
+	scanner := bufio.NewScanner(origin_template)
+	s := 0
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, "kernelopt=") {
+			re := regexp.MustCompile(`^(kernelopt=).*$`)
+			t := re.ReplaceAllString(line, fmt.Sprintf("${1}ks=%s", kickstartUrl))
+			write, err := buf.Write([]byte(fmt.Sprintf("%s\n", t)))
+			s = s + write
+			if err != nil {
+				return nil, err
 			}
+		} else {
+			write, _ := buf.Write([]byte(fmt.Sprintf("%s\n", line)))
+			s = s + write
 		}
-		return false, ""
+
 	}
+	ret := &hackReader{
+		buf,
+		int64(s),
+	}
+	return ret, nil
+}
+
+func getNic(filename string, cfg *config.Config) (bool, string) {
+	for k, _ := range cfg.Nics {
+		if strings.Contains(filename, k) {
+			return true, k
+		}
+	}
+	return false, ""
+}
 
 func pxeWriteHandler(cfg *config.Config) func(filename string, rf io.WriterTo) error {
 	return func(filename string, rf io.WriterTo) error{
@@ -123,7 +123,7 @@ func pxeWriteHandler(cfg *config.Config) func(filename string, rf io.WriterTo) e
 func Start(cfg *config.Config) {
 	s := tftp.NewServer(pxeReadHandler(cfg), pxeWriteHandler(cfg))
 	s.SetTimeout(5 * time.Second)
-	err := s.ListenAndServe(fmt.Sprintf("%s:69", cfg.BindIP))
+	err := s.ListenAndServe(fmt.Sprintf("%s:10002", cfg.BindIP))
 	if err != nil {
 		fmt.Fprintf(os.Stdout, "server: %v\n", err)
 		os.Exit(1)

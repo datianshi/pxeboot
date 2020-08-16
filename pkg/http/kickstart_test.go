@@ -34,7 +34,6 @@ root_path: ./fixture/image
 boot_config_file: efi/boot/boot.cfg
 ntp_server: time.svc.pivotal.io
 kickstart_template: |
-  # Accept the VMware End User License Agreement
     vmaccepteula
     clearpart --overwritevmfs --alldrives
 

@@ -45,7 +45,7 @@ func handleDHCP(cfg *config.Config) server4.Handler {
 func Start(cfg *config.Config) {
 	laddr := net.UDPAddr{
 		IP:   net.ParseIP("0.0.0.0"),
-		Port: 67,
+		Port: 10001,
 	}
 	server, err := server4.NewServer(cfg.DHCPInterface, &laddr, handleDHCP(cfg))
 	if err != nil {
