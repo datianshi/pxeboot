@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/datianshi/pxeboot/pkg/config"
 	"github.com/datianshi/pxeboot/pkg/http/api"
-	"github.com/datianshi/pxeboot/pkg/http/ui"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
@@ -21,7 +20,7 @@ func Start(conf *config.Config, router *mux.Router){
 		Handler: router, // Pass our instance of gorilla/mux in.
 	}
 	a := api.NewAPI(conf)
-	if err := ui.RegisterUITemplate(router); err != nil {
+	if err := api.RegisterUITemplate(router); err != nil {
 		log.Fatal(err)
 	}
 	router.HandleFunc("/api/conf", a.GetConfigHandler())

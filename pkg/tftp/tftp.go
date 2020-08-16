@@ -121,9 +121,15 @@ func pxeWriteHandler(cfg *config.Config) func(filename string, rf io.WriterTo) e
 
 
 func Start(cfg *config.Config) {
+	var port int
+	if cfg.TFTPServerPort != 0 {
+		port = cfg.TFTPServerPort
+	} else {
+		port = 67
+	}
 	s := tftp.NewServer(pxeReadHandler(cfg), pxeWriteHandler(cfg))
 	s.SetTimeout(5 * time.Second)
-	err := s.ListenAndServe(fmt.Sprintf("%s:10002", cfg.BindIP))
+	err := s.ListenAndServe(fmt.Sprintf("%s:%d", cfg.BindIP, port))
 	if err != nil {
 		fmt.Fprintf(os.Stdout, "server: %v\n", err)
 		os.Exit(1)

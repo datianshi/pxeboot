@@ -1,5 +1,6 @@
 package api
 
+import "C"
 import (
 	"encoding/json"
 	"errors"
@@ -8,18 +9,55 @@ import (
 	"github.com/datianshi/pxeboot/pkg/util"
 	"github.com/gorilla/mux"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
+	"time"
 )
 
 
 type API struct {
+	r *mux.Router
 	cfg *config.Config
+}
+
+type ServerItem struct {
+	Ip string `yaml:"ip" json:"ip"`
+	DhcpIp string `yaml:"dhcp_ip" json:"dhcp_ip"`
+	Hostname string `yaml:"hostname" json:"hostname"`
+	MacAddress string `json:"mac_address"`
 }
 
 func NewAPI(c *config.Config) *API {
 	return &API{
+		r: mux.NewRouter(),
 		cfg: c,
+	}
+}
+
+func (a *API) Start() {
+	var port int
+	if a.cfg.HTTPPort != 0 {
+		port = a.cfg.HTTPPort
+	} else {
+		port = 80
+	}
+	srv := &http.Server{
+		Addr:         fmt.Sprintf("%s:%d", a.cfg.ManagementIp, port),
+		// Good practice to set timeouts to avoid Slowloris attacks.
+		WriteTimeout: time.Second * 15,
+		ReadTimeout:  time.Second * 15,
+		IdleTimeout:  time.Second * 60,
+		Handler: a.r, // Pass our instance of gorilla/mux in.
+	}
+	a.r.HandleFunc("/api/conf", a.GetConfigHandler())
+	a.r.HandleFunc("/api/conf/nic/{mac_address}", a.UpdateNicConfig()).Methods("PUT")
+	a.r.HandleFunc("/api/conf/nic", a.CreateNicConfig()).Methods("POST")
+	if err := RegisterUITemplate(a.r); err != nil {
+		log.Fatal(err)
+	}
+	if err := srv.ListenAndServe(); err != nil {
+		log.Fatal(err)
 	}
 }
 
@@ -63,13 +101,6 @@ func (api *API) UpdateNicConfig() http.HandlerFunc {
 			w.WriteHeader(http.StatusAccepted)
 		}
 	}
-}
-
-type ServerItem struct {
-	Ip string `yaml:"ip" json:"ip"`
-	DhcpIp string `yaml:"dhcp_ip" json:"dhcp_ip"`
-	Hostname string `yaml:"hostname" json:"hostname"`
-	MacAddress string `json:"mac_address"`
 }
 
 func (api *API) CreateNicConfig() http.HandlerFunc {

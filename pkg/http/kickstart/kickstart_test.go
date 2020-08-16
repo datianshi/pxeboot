@@ -1,9 +1,9 @@
-package http_test
+package kickstart_test
 
 import (
 	"bytes"
 	"github.com/datianshi/pxeboot/pkg/config"
-	h "github.com/datianshi/pxeboot/pkg/http"
+	"github.com/datianshi/pxeboot/pkg/http/kickstart"
 	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
@@ -72,48 +72,43 @@ func TestKickStart(t *testing.T) {
 		t.Fatalf("Can not process the config %v", err)
 	}
 
-	k := h.Kickstart{
-		R: router,
-		C: cfg,
-	}
-
+	k := kickstart.NewKickStart(cfg)
+	router.HandleFunc("/kickstart/{mac_address}/ks.cfg", k.Handler())
 	r, err := http.NewRequest("GET", "/kickstart/00-50-56-82-61-7c/ks.cfg", nil)
 	w := httptest.NewRecorder()
-	k.RegisterServerEndpoint()
 	router.ServeHTTP(w, r)
 	resp := w.Result()
 	body, _ := ioutil.ReadAll(resp.Body)
 	real := string(body)
-	expected := `# Accept the VMware End User License Agreement
-  vmaccepteula
-  clearpart --overwritevmfs --alldrives
+	expected := `vmaccepteula
+clearpart --overwritevmfs --alldrives
 
-  # Set the root password for the DCUI and Tech Support Mode
-  rootpw VMware1!
+# Set the root password for the DCUI and Tech Support Mode
+rootpw VMware1!
 
-  # Install on the first local disk available on machine
-  #install --firstdisk="DELLBOSS VD",Hypervisor_0,HV,usb,IDSDM --overwritevmfs --novmfsondisk
-  install --firstdisk --overwritevmfs
+# Install on the first local disk available on machine
+#install --firstdisk="DELLBOSS VD",Hypervisor_0,HV,usb,IDSDM --overwritevmfs --novmfsondisk
+install --firstdisk --overwritevmfs
 
-  # Set the network to DHCP on the first network adapter
-  network --bootproto=static --addvmportgroup=1 --ip=10.65.101.11 --netmask=255.255.255.0 --gateway=10.65.101.1 --nameserver=10.192.2.10 --hostname=vc-02.example.org
-  reboot
+# Set the network to DHCP on the first network adapter
+network --bootproto=static --addvmportgroup=1 --ip=10.65.101.11 --netmask=255.255.255.0 --gateway=10.65.101.1 --nameserver=10.192.2.10 --hostname=vc-02.example.org
+reboot
 
-  %firstboot --interpreter=busybox
-  vim-cmd hostsvc/enable_ssh
-  vim-cmd hostsvc/start_ssh
-  vim-cmd hostsvc/enable_esx_shell
-  vim-cmd hostsvc/start_esx_shell
-  cat > /etc/ntp.conf << __NTP_CONFIG__
-  restrict default kod nomodify notrap noquerynopeer
-  restrict 127.0.0.1
-  server time.svc.pivotal.io
-  __NTP_CONFIG__
+%firstboot --interpreter=busybox
+vim-cmd hostsvc/enable_ssh
+vim-cmd hostsvc/start_ssh
+vim-cmd hostsvc/enable_esx_shell
+vim-cmd hostsvc/start_esx_shell
+cat > /etc/ntp.conf << __NTP_CONFIG__
+restrict default kod nomodify notrap noquerynopeer
+restrict 127.0.0.1
+server time.svc.pivotal.io
+__NTP_CONFIG__
 
-  /sbin/chkconfig ntpd on
+/sbin/chkconfig ntpd on
 
-  reboot`
+reboot`
 	if strings.Compare(real, expected) != 0 {
-		t.Errorf("\n%s\n not equal to \n%s\nabc", real, expected)
+		t.Errorf("\n%s\n not equal to \n%s\n", real, expected)
 	}
 }

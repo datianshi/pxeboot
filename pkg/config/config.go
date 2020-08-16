@@ -39,7 +39,11 @@ type ServerConfig struct {
 }
 type Config struct {
 	BindIP string `yaml:"bind_ip" json:"bind_ip"`
+	ManagementIp string `yaml:"management_ip" json:"management_ip"`
 	DNS string `yaml:"dns" json:"dns"`
+	DHCPServerPort int `yaml:"dhcp_server_port" json:"dhcp_server_port"`
+	TFTPServerPort int `yaml:"tftp_server_port" json:"tftp_server_port"`
+	HTTPPort int `yaml:"http_port" json:"http_port"`
 	Gateway string `yaml:"gateway" json:"gateway"`
 	NTPServer string `yaml:"ntp_server" json:"ntp_server"`
 	Netmask string `yaml:"netmask" json:"netmask"`

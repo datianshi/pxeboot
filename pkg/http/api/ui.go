@@ -1,9 +1,9 @@
-package ui
+package api
 
 import (
 	"github.com/gorilla/mux"
-	"net/http"
 	"html/template"
+	"net/http"
 )
 
 func RegisterUITemplate(r *mux.Router) error{
