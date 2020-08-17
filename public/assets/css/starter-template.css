@@ -6,14 +6,8 @@ body {
     text-align: center;
 }
 
-/*.dropdown-menu {*/
-/*    height: 350px;*/
-/*}*/
-
-/*.container {*/
-/*    height: 350px;*/
-/*}*/
-
-/*.div {*/
-/*    overflow:hidden;*/
-/*}*/
+.config_content {
+    margin-top: 50px;
+    height: 350px;
+    overflow-y: scroll;
+}

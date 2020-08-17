@@ -115,6 +115,22 @@ func TestCreateNicConfig(t *testing.T) {
 	if !found {
 		t.Errorf("New nic config is not created")
 	}
+
+	requestBodyWithWrongMac := `
+{
+	"mac_address": 
+	"00:50:A6:83:7:98", 
+	"ip": "10.65.101.31" , 
+	"dhcp_ip": "172.16.100.102", 
+	"hostname": "test-host" 
+}
+`
+	r, _ = http.NewRequest("POST", "/api/conf/nic", bytes.NewBufferString(requestBodyWithWrongMac))
+	w = httptest.NewRecorder()
+	router.ServeHTTP(w, r)
+	if w.Result().StatusCode != http.StatusBadRequest {
+		t.Errorf("Expected the http status code %d, but got %d", http.StatusBadRequest, w.Result().StatusCode)
+	}
 }
 
 

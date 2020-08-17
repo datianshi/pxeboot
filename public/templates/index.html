@@ -41,26 +41,63 @@
 
 <main role="main" class="container">
 
-    <form id="mac_edit_form">
-        <div class="form-group">
-            <label for="mac_address">Mac Address</label>
-            <select class="form-control" id="mac_address">
-            </select>
+    <div class="row">
+        <div class="col-sm">
+            <form id="mac_edit_form">
+                <div class="form-group" >
+                    <label for="mac_address_edit">Mac Address</label>
+                    <select class="form-control" id="mac_address_edit">
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="dhcp_ip_edit">DHCP IP</label>
+                    <input class="form-control" id="dhcp_ip_edit" placeholder="172.16.100.100">
+                </div>
+                <div class="form-group">
+                    <label for="static_ip_edit">Static IP</label>
+                    <input class="form-control" id="static_ip_edit" placeholder="10.65.62.100">
+                </div>
+                <div class="form-group">
+                    <label for="host_name_edit">Host Name</label>
+                    <input class="form-control" id="host_name_edit" placeholder="server.example.com">
+                </div>
+                <button id="edit_nic_button" class="btn btn-primary">Submit</button>
+                <button id="delete_nic_button" class="btn btn-primary">Delete</button>
+            </form>
         </div>
-        <div class="form-group">
-            <label for="dhcp_ip">DHCP IP</label>
-            <input class="form-control" id="dhcp_ip" placeholder="172.16.100.100">
+        <div class="col-sm">
+
         </div>
-        <div class="form-group">
-            <label for="static_ip">Static IP</label>
-            <input class="form-control" id="static_ip" placeholder="10.65.62.100">
+        <div class="col-sm">
+            <form id="mac_add_form">
+                <div class="form-group">
+                    <label for="mac_address_add">Mac Address</label>
+                    <input class="form-control" id="mac_address_add" placeholder="example: 00:50:A6:83:75:98">
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="dhcp_ip_add">DHCP IP</label>
+                    <input class="form-control" id="dhcp_ip_add" placeholder="example: 172.16.35.46">
+                </div>
+                <div class="form-group">
+                    <label for="static_ip_add">Static IP</label>
+                    <input class="form-control" id="static_ip_add" placeholder="example: 10.65.34.67">
+                </div>
+                <div class="form-group">
+                    <label for="host_name_add">Host Name</label>
+                    <input class="form-control" id="host_name_add" placeholder="example: server1.example.org">
+                </div>
+                <button type="submit" class="btn btn-primary">Add</button>
+            </form>
         </div>
-        <div class="form-group">
-            <label for="host_name">Host Name</label>
-            <input class="form-control" id="host_name" placeholder="server.example.com">
-        </div>
-        <button type="submit" class="btn btn-primary">Submit</button>
-    </form>
+    </div>
+
+    <div class="row config_content">
+        <pre>
+            <code id="config_content">
+            </code>
+        </pre>
+    </div>
 
 </main><!-- /.container -->
 </html>

@@ -21,13 +21,6 @@ type API struct {
 	cfg *config.Config
 }
 
-type ServerItem struct {
-	Ip string `yaml:"ip" json:"ip"`
-	DhcpIp string `yaml:"dhcp_ip" json:"dhcp_ip"`
-	Hostname string `yaml:"hostname" json:"hostname"`
-	MacAddress string `json:"mac_address"`
-}
-
 func NewAPI(c *config.Config) *API {
 	return &API{
 		r: mux.NewRouter(),
@@ -52,7 +45,7 @@ func (a *API) Start() {
 	}
 	a.r.HandleFunc("/api/conf", a.GetConfigHandler())
 	a.r.HandleFunc("/api/conf/nics", a.GetNics())
-	a.r.HandleFunc("/api/conf/nic/{mac_address}", a.GetNic())
+	a.r.HandleFunc("/api/conf/nic/{mac_address}", a.GetNic()).Methods("GET")
 	a.r.HandleFunc("/api/conf/nic/{mac_address}", a.UpdateNicConfig()).Methods("PUT")
 	a.r.HandleFunc("/api/conf/nic/{mac_address}", a.DeleteNic()).Methods("DELETE")
 	a.r.HandleFunc("/api/conf/deletenics", a.DeleteAllNics()).Methods("DELETE")
@@ -132,6 +125,7 @@ func convertToServerItems(nics map[string]config.ServerConfig) []ServerItem {
 
 func (api *API) UpdateNicConfig() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("update")
 		var serverConfig config.ServerConfig
 		vars := mux.Vars(r)
 		mac_address := vars["mac_address"]
@@ -196,9 +190,15 @@ func (api *API) CreateNicConfig() http.HandlerFunc {
 				panic(err)
 			}
 		} else {
-			serverConfig := config.ServerConfig{serverItem.Ip, serverItem.DhcpIp, serverItem.Hostname}
-			api.cfg.Nics[convertLowerCaseDash(serverItem.MacAddress)] = serverConfig
-			w.WriteHeader(http.StatusAccepted)
+			if err:= serverItem.Validate(); err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				w.Write([]byte(err.Error()))
+			} else {
+				fmt.Println("still come here")
+				serverConfig := config.ServerConfig{serverItem.Ip, serverItem.DhcpIp, serverItem.Hostname}
+				api.cfg.Nics[convertLowerCaseDash(serverItem.MacAddress)] = serverConfig
+				w.WriteHeader(http.StatusAccepted)
+			}
 		}
 	}
 }
