@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/datianshi/pxeboot/pkg/config"
 	"github.com/datianshi/pxeboot/pkg/dhcp"
-	"github.com/datianshi/pxeboot/pkg/http"
+	"github.com/datianshi/pxeboot/pkg/http/api"
+	"github.com/datianshi/pxeboot/pkg/http/kickstart"
 	"github.com/datianshi/pxeboot/pkg/tftp"
-	"github.com/gorilla/mux"
 	"log"
 	"os"
 )
@@ -31,21 +31,25 @@ func main() {
 		log.Fatalln("can not load the config", err)
 	}
 
-	//Load Http Endpoint
-	router := mux.NewRouter()
-	k := http.Kickstart{
-		R: router,
-		C: cfg,
-	}
-	k.RegisterServerEndpoint()
+	//start kickstart http server
+	k := kickstart.NewKickStart(cfg)
 	go func(){
-		http.Start(cfg, router)
+		k.Start()
 	}()
+	//Start management api server
+	if cfg.ManagementIp != "" {
+		a := api.NewAPI(cfg)
+		go func(){
+			a.Start()
+		}()
+	}
 
 	//Start TFTP
 	go func() {
 		tftp.Start(cfg)
 	}()
+
+
 
 	//Start dhcp server and block
 	dhcp.Start(cfg)

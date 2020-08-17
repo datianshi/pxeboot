@@ -3,7 +3,7 @@ package dhcp
 import (
 	"fmt"
 	"github.com/datianshi/pxeboot/pkg/config"
-	"github.com/datianshi/pxeboot/pkg/http"
+	"github.com/datianshi/pxeboot/pkg/http/kickstart"
 	"github.com/datianshi/pxeboot/pkg/util"
 	"github.com/insomniacslk/dhcp/dhcpv4"
 	"github.com/insomniacslk/dhcp/dhcpv4/server4"
@@ -12,7 +12,7 @@ import (
 )
 
 type DhcpServer struct{
-	k http.Kickstart
+	k kickstart.Kickstart
 	c config.Config
 }
 
@@ -43,9 +43,15 @@ func handleDHCP(cfg *config.Config) server4.Handler {
 	}
 }
 func Start(cfg *config.Config) {
+	var port int
+	if cfg.DHCPServerPort != 0 {
+		port = cfg.DHCPServerPort
+	} else {
+		port = 67
+	}
 	laddr := net.UDPAddr{
 		IP:   net.ParseIP("0.0.0.0"),
-		Port: 67,
+		Port: port,
 	}
 	server, err := server4.NewServer(cfg.DHCPInterface, &laddr, handleDHCP(cfg))
 	if err != nil {

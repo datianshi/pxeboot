@@ -1,0 +1,13 @@
+body {
+    padding-top: 5rem;
+}
+.starter-template {
+    padding: 3rem 1.5rem;
+    text-align: center;
+}
+
+.config_content {
+    margin-top: 50px;
+    height: 350px;
+    overflow-y: scroll;
+}
