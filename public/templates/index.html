@@ -42,7 +42,7 @@
 <main role="main" class="container">
 
     <div class="row">
-        <div class="col-sm">
+        <div class="col-md">
             <form id="mac_edit_form">
                 <div class="form-group" >
                     <label for="mac_address_edit">Mac Address</label>
@@ -65,10 +65,7 @@
                 <button id="delete_nic_button" class="btn btn-primary">Delete</button>
             </form>
         </div>
-        <div class="col-sm">
-
-        </div>
-        <div class="col-sm">
+        <div class="col-md">
             <form id="mac_add_form">
                 <div class="form-group">
                     <label for="mac_address_add">Mac Address</label>
@@ -91,6 +88,15 @@
             </form>
         </div>
     </div>
+
+    <div class="row config_content">
+        <form id="upload_image" action="api/image" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <input type="file" class="form-control" id="upload_image_input" accept=".iso" name="image">
+                <button type="submit" class="btn btn-primary">Upload</button>
+            </div>
+        </form>
+        <div>
 
     <div class="row config_content">
         <pre>

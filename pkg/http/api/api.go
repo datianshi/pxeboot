@@ -19,12 +19,16 @@ import (
 type API struct {
 	r *mux.Router
 	cfg *config.Config
+	imageUploader *ImageUploader
 }
 
 func NewAPI(c *config.Config) *API {
 	return &API{
 		r: mux.NewRouter(),
 		cfg: c,
+		imageUploader: &ImageUploader{
+			c,
+		},
 	}
 }
 
@@ -50,6 +54,7 @@ func (a *API) Start() {
 	a.r.HandleFunc("/api/conf/nic/{mac_address}", a.DeleteNic()).Methods("DELETE")
 	a.r.HandleFunc("/api/conf/deletenics", a.DeleteAllNics()).Methods("DELETE")
 	a.r.HandleFunc("/api/conf/nic", a.CreateNicConfig()).Methods("POST")
+	a.r.HandleFunc("/api/image", a.imageUploader.UploadHandler()).Methods("POST")
 	if err := RegisterUITemplate(a.r); err != nil {
 		log.Fatal(err)
 	}

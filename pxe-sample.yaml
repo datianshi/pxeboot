@@ -36,7 +36,7 @@ boot_file: efi/boot/bootx64.efi
 #DHCP Lease time in second
 lease_time: 500
 #TFTP Root Path, which is the extracted iso image folder
-root_path: /home/ubuntu/images
+root_path: /Users/sding/image
 #ESXi ntp server
 ntp_server: time.svc.pivotal.io
 #boot config file, which comes with iso image. Used to interpolate values
