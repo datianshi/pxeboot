@@ -125,7 +125,7 @@ func Start(cfg *config.Config) {
 	if cfg.TFTPServerPort != 0 {
 		port = cfg.TFTPServerPort
 	} else {
-		port = 67
+		port = 69
 	}
 	s := tftp.NewServer(pxeReadHandler(cfg), pxeWriteHandler(cfg))
 	s.SetTimeout(5 * time.Second)
