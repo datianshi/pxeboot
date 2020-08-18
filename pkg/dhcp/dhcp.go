@@ -26,7 +26,7 @@ func handleDHCP(cfg *config.Config, pool *ServerPool) server4.Handler {
 			log.Println(fmt.Sprintf("No DHCP Offering for mac address: %s", client_mac))
 			return
 		}
-		replyIp, err := pool.AssignIP()
+		replyIp, err := pool.AssignIP(m.ClientHWAddr)
 		if err != nil {
 			log.Printf("Can not assign IP error %s", err.Error())
 			return

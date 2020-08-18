@@ -16,10 +16,16 @@ type ServerPool struct {
 	items []*item
 }
 
-func (p ServerPool) AssignIP() (net.IP, error) {
+func (p ServerPool) AssignIP(addr net.HardwareAddr) (net.IP, error) {
 	var ip net.IP
+	//checking if there is already a lease with this mac address
 	for _, item := range p.items {
-		if ip = item.take(); ip != nil {
+		if addr.String() == item.hardwareAddr.String() {
+			return item.ip, nil
+		}
+	}
+	for _, item := range p.items {
+		if ip = item.take(addr); ip != nil {
 			return ip, nil
 		}
 	}
@@ -72,13 +78,14 @@ type item struct {
 	lease int
 	taken bool
 	ip net.IP
+	hardwareAddr net.HardwareAddr
 }
 
 func (i *item) isTaken() bool {
 	return i.taken
 }
 
-func (i *item) take() net.IP{
+func (i *item) take(addr net.HardwareAddr) net.IP{
 	if i.taken {
 		return nil
 	} else {
@@ -86,8 +93,10 @@ func (i *item) take() net.IP{
 		go func() {
 			timer := time.NewTimer(time.Duration(i.lease) * time.Second)
 			<-timer.C
+			i.hardwareAddr = nil
 			i.taken = false
 		}()
+		i.hardwareAddr = addr
 		return i.ip
 	}
 }
