@@ -20,9 +20,19 @@ Goals:
     
 ```yaml
 #DHCP Bind Interface
-dhcp_interface: ens224
+dhcp_interface: vboxnet5
 #DHCP Server IP
-bind_ip: 172.16.100.2
+bind_ip: 192.168.99.1
+#Management IP which sit on an management network
+management_ip: 192.168.62.1
+#DHCP Range
+dhcp_range: 172.16.100.10 - 172.16.100.100
+#Default 67
+#dhcp_server_port: 10000
+#Default 69
+#tftp_server_port: 10001
+#Default 80
+#http_port: 8089
 #ESXi Servers Gateway
 gateway: 10.65.101.1
 #ESXi Servers Netmask
@@ -34,14 +44,11 @@ password: VMware1!
 nics:
   #ESXi Nic Address
   00-50-56-82-70-2a:
-    #DHCP IP Assignment (to reach to the DHCP Server)
-    dhcp_ip: 172.16.100.100
     #ESXi Static IP Assignment
     ip: 10.65.101.10
     #ESXi Host Name Assignment
     hostname: vc-01.example.org
   00-50-56-82-d8-86:
-    dhcp_ip: 172.16.100.101
     ip: 10.65.101.11
     hostname: vc-02.example.org
 #Boot File Path. Relative to the extracted iso image folder
@@ -49,10 +56,10 @@ boot_file: efi/boot/bootx64.efi
 #DHCP Lease time in second
 lease_time: 500
 #TFTP Root Path, which is the extracted iso image folder
-root_path: /home/ubuntu/images
+root_path: /Users/sding/image
 #ESXi ntp server
 ntp_server: time.svc.pivotal.io
-#boot config file, which comes with iso image. Used to interpolate values 
+#boot config file, which comes with iso image. Used to interpolate values
 boot_config_file: efi/boot/boot.cfg
 #kick start template with variables -> password, ip, netmask, gateway, nameserver, ntpserver and hostname
 kickstart_template: |

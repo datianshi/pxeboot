@@ -34,13 +34,13 @@ ntp_server: time.svc.pivotal.io
 
 type ServerConfig struct {
 	Ip string `yaml:"ip" json:"ip"`
-	DhcpIp string `yaml:"dhcp_ip" json:"dhcp_ip"`
 	Hostname string `yaml:"hostname" json:"hostname"`
 }
 type Config struct {
 	BindIP string `yaml:"bind_ip" json:"bind_ip"`
 	ManagementIp string `yaml:"management_ip" json:"management_ip"`
 	DNS string `yaml:"dns" json:"dns"`
+	DHCPRange string `yaml:"dhcp_range" json:"dhcp_range"`
 	DHCPServerPort int `yaml:"dhcp_server_port" json:"dhcp_server_port"`
 	TFTPServerPort int `yaml:"tftp_server_port" json:"tftp_server_port"`
 	HTTPPort int `yaml:"http_port" json:"http_port"`

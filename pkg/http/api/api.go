@@ -99,7 +99,6 @@ func (api *API) GetNic() http.HandlerFunc {
 		}
 		item := ServerItem{
 			serverConfig.Ip,
-			serverConfig.DhcpIp,
 			serverConfig.Hostname,
 			mac_address,
 		}
@@ -118,7 +117,6 @@ func convertToServerItems(nics map[string]config.ServerConfig) []ServerItem {
 	for k,v := range nics {
 		item := ServerItem{
 			v.Ip,
-			v.DhcpIp,
 			v.Hostname,
 			k,
 		}
@@ -199,8 +197,7 @@ func (api *API) CreateNicConfig() http.HandlerFunc {
 				w.WriteHeader(http.StatusBadRequest)
 				w.Write([]byte(err.Error()))
 			} else {
-				fmt.Println("still come here")
-				serverConfig := config.ServerConfig{serverItem.Ip, serverItem.DhcpIp, serverItem.Hostname}
+				serverConfig := config.ServerConfig{serverItem.Ip, serverItem.Hostname}
 				api.cfg.Nics[convertLowerCaseDash(serverItem.MacAddress)] = serverConfig
 				w.WriteHeader(http.StatusAccepted)
 			}
