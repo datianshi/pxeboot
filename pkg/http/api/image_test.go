@@ -10,21 +10,26 @@ import (
 )
 
 func TestImageUpload(t *testing.T){
-	t.Skip("skipping test.")
 	c := &config.Config{
 		RootPath: "./fixture",
 	}
 	imageUploader := &api.ImageUploader{
 		Cfg: c,
 	}
-	src, err := os.Open("/Users/sding/Downloads/VMware-VMvisor-Installer-7.0.0-15843807.x86_64.iso")
+	src, err := os.Open("./fixture/test.iso")
 	if err != nil {
 		fmt.Println(err)
 	}
 	r, err := iso9660.NewReader(src)
 	if err != nil {
 		fmt.Println(err)
-	}
-	imageUploader.Upload(r)
 
+	}
+	defer cleanUp()
+	imageUploader.Upload(r)
+}
+
+func cleanUp() {
+	os.Remove("./fixture/file1.")
+	os.Remove("./fixture/file2.")
 }
