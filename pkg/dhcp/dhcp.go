@@ -16,14 +16,19 @@ type DhcpServer struct{
 	c config.Config
 }
 
-func handleDHCP(cfg *config.Config) server4.Handler {
+func handleDHCP(cfg *config.Config, pool *ServerPool) server4.Handler {
 	return func(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) {
 		// this function will just print the received DHCPv4 message, without replying
 		log.Print(m.Summary())
 		client_mac := m.ClientHWAddr.String()
-		serverConfig, found := cfg.Nics[util.Colon_To_Dash(client_mac)]
+		_, found := cfg.Nics[util.Colon_To_Dash(client_mac)]
 		if !found {
 			log.Println(fmt.Sprintf("No DHCP Offering for mac address: %s", client_mac))
+			return
+		}
+		replyIp, err := pool.AssignIP(m.ClientHWAddr)
+		if err != nil {
+			log.Printf("Can not assign IP error %s", err.Error())
 			return
 		}
 		ret, _ := dhcpv4.New(
@@ -31,7 +36,7 @@ func handleDHCP(cfg *config.Config) server4.Handler {
 			dhcpv4.WithNetmask(net.IPv4Mask(255, 255, 255, 0)),
 			dhcpv4.WithServerIP(net.ParseIP(cfg.BindIP)),
 			dhcpv4.WithLeaseTime(uint32(cfg.LeaseTime)),
-			dhcpv4.WithYourIP(net.ParseIP(serverConfig.DhcpIp)),
+			dhcpv4.WithYourIP(replyIp),
 		)
 		//TFTP Server
 		ret.Options[66] = []byte(cfg.BindIP)
@@ -53,7 +58,11 @@ func Start(cfg *config.Config) {
 		IP:   net.ParseIP("0.0.0.0"),
 		Port: port,
 	}
-	server, err := server4.NewServer(cfg.DHCPInterface, &laddr, handleDHCP(cfg))
+	pool, err := NewServerPool(cfg.LeaseTime, cfg.DHCPRange)
+	if err != nil {
+		log.Fatal(err)
+	}
+	server, err := server4.NewServer(cfg.DHCPInterface, &laddr, handleDHCP(cfg, pool))
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -27,7 +27,6 @@ function load_conf() {
 }
 
 function load_nic(nic) {
-    $("#dhcp_ip_edit").val(nic.dhcp_ip)
     $("#host_name_edit").val(nic.hostname)
     $("#static_ip_edit").val(nic.ip)
     $("#mac_address_edit").val(nic.mac_address)
@@ -45,7 +44,6 @@ function select_nic_change(){
 function submit_nic_change(){
     $("#edit_nic_button").click(function() {
         var putData = {}
-        putData.dhcp_ip = $("#dhcp_ip_edit").val()
         putData.hostname = $("#host_name_edit").val()
         putData.ip = $("#static_ip_edit").val()
         var current_mac = $("#mac_address_edit").val()
@@ -81,7 +79,6 @@ function add_nic_change(){
     $("#mac_add_form").submit(function (e) {
         e.preventDefault()
         var postData = {}
-        postData.dhcp_ip = $("#dhcp_ip_add").val()
         postData.hostname = $("#host_name_add").val()
         postData.ip = $("#static_ip_add").val()
         postData.mac_address = $("#mac_address_add").val()
