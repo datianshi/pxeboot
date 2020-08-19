@@ -98,6 +98,25 @@ kickstart_template: |
 
 **YES** Program needs to run in the same layer2 network with Servers
 
-```go run cmd/pxe/main.go -config pxe.yaml``` 
+```go run cmd/pxe/main.go -config pxe.yaml```
+
+## API  
+
+### Add Mac Address
+
+```
+curl -X POST http://Management_IP/api/conf/nic --data '{"mac_address":"00:50:56:82:75:e5", "hostname":"server1", "ip":"10.65.101.10"}'
+```
+### Delete Mac Address
+
+```
+curl -X DELETE http://Management_IP/api/conf/nic/${mac_address}
+```
+
+## UI
+
+```
+http://Management_IP/
+```
 
 ## A lot of future work :) Foundation exist !~ 
