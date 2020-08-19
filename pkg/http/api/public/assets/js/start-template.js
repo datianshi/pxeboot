@@ -11,7 +11,7 @@ $(document).ready(function() {
 function load_nics() {
     $.get("api/conf/nics", function(data, status, xhr){
         $("#mac_address_edit").empty()
-        if (data.length > 0) {
+        if (data != null && data.length > 0) {
             for (let i = 0; i < data.length; i++) {
                 $("#mac_address_edit").append("<option>" + data[i].mac_address + "</option>")
             }

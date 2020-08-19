@@ -11,7 +11,7 @@
     <link rel="canonical" href="https://getbootstrap.com/docs/4.5/examples/starter-template/">
 
     <!-- Bootstrap core CSS -->
-    <link href="static/bootstrap-4.5.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="static/assets/bootstrap-4.5.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
         .bd-placeholder-img {
@@ -30,10 +30,10 @@
         }
     </style>
     <!-- Custom styles for this template -->
-    <link href="static/css/starter-template.css" rel="stylesheet">
+    <link href="static/assets/css/starter-template.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="static/bootstrap-4.5.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="static/js/start-template.js"></script>
+    <script src="static/assets/bootstrap-4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="static/assets/js/start-template.js"></script>
 </head>
 <body>
 <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/datianshi/pxeboot/pkg/config"
 	"github.com/datianshi/pxeboot/pkg/util"
+	"github.com/gobuffalo/packr/v2"
 	"github.com/gorilla/mux"
 	"io/ioutil"
 	"log"
@@ -20,6 +21,7 @@ type API struct {
 	r *mux.Router
 	cfg *config.Config
 	imageUploader *ImageUploader
+	htmlBox *packr.Box
 }
 
 func NewAPI(c *config.Config) *API {
@@ -29,6 +31,7 @@ func NewAPI(c *config.Config) *API {
 		imageUploader: &ImageUploader{
 			c,
 		},
+		htmlBox: packr.New("html", "./public"),
 	}
 }
 
@@ -55,7 +58,7 @@ func (a *API) Start() {
 	a.r.HandleFunc("/api/conf/deletenics", a.DeleteAllNics()).Methods("DELETE")
 	a.r.HandleFunc("/api/conf/nic", a.CreateNicConfig()).Methods("POST")
 	a.r.HandleFunc("/api/image", a.imageUploader.UploadHandler()).Methods("POST")
-	if err := RegisterUITemplate(a.r); err != nil {
+	if err := a.RegisterUITemplate(a.r); err != nil {
 		log.Fatal(err)
 	}
 	if err := srv.ListenAndServe(); err != nil {

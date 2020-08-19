@@ -18,7 +18,6 @@ type DhcpServer struct{
 
 func handleDHCP(cfg *config.Config, pool *ServerPool) server4.Handler {
 	return func(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) {
-		// this function will just print the received DHCPv4 message, without replying
 		log.Print(m.Summary())
 		client_mac := m.ClientHWAddr.String()
 		_, found := cfg.Nics[util.Colon_To_Dash(client_mac)]

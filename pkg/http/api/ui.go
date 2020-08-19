@@ -6,20 +6,20 @@ import (
 	"net/http"
 )
 
-func RegisterUITemplate(r *mux.Router) error{
-	tmpl, err := template.ParseFiles("./public/templates/index.html")
-	if err != nil {
+func (api *API) RegisterUITemplate(r *mux.Router) error{
+	var indexHtml string
+	var err error
+	var tmpl *template.Template = template.New("Html Template")
+	if indexHtml, err = api.htmlBox.FindString("templates/index.html.tpl"); err != nil {
 		return err
 	}
-	r.HandleFunc("/", HomeHandler(tmpl))
-	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("public/assets"))))
-	r.HandleFunc("/static/", HomeHandler(tmpl))
-	return nil
-}
-
-func HomeHandler(tmpl *template.Template) http.HandlerFunc{
-	t, _ := template.ParseFiles("./public/templates/index.html")
-	return func(w http.ResponseWriter, r *http.Request) {
-		t.Execute(w, nil)
+	if tmpl, err = tmpl.Parse(indexHtml); err != nil {
+		return err
 	}
+	homeHander := func(w http.ResponseWriter, r *http.Request) {
+		tmpl.Execute(w, nil)
+	}
+	r.HandleFunc("/", homeHander)
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(api.htmlBox)))
+	return nil
 }
