@@ -11,7 +11,7 @@ import (
 )
 
 type ImageUploader struct {
-	Cfg *config.Config
+	Cfg *config.DHCPInterface
 }
 
 func (iu *ImageUploader) UploadHandler() http.HandlerFunc {

@@ -13,20 +13,19 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"time"
 )
 
 
 type API struct {
 	r *mux.Router
-	cfg *config.Config
+	cfg *config.DHCPInterface
 	imageUploader *ImageUploader
 	htmlBox *packr.Box
 }
 
-func NewAPI(c *config.Config) *API {
+func NewAPI(c *config.DHCPInterface, r *mux.Router) *API {
 	return &API{
-		r: mux.NewRouter(),
+		r: r,
 		cfg: c,
 		imageUploader: &ImageUploader{
 			c,
@@ -35,35 +34,18 @@ func NewAPI(c *config.Config) *API {
 	}
 }
 
-func (a *API) Start() {
-	var port int
-	if a.cfg.HTTPPort != 0 {
-		port = a.cfg.HTTPPort
-	} else {
-		port = 80
-	}
-	srv := &http.Server{
-		Addr:         fmt.Sprintf("%s:%d", a.cfg.ManagementIp, port),
-		// Good practice to set timeouts to avoid Slowloris attacks.
-		WriteTimeout: time.Second * 15,
-		ReadTimeout:  time.Second * 15,
-		IdleTimeout:  time.Second * 60,
-		Handler: a.r, // Pass our instance of gorilla/mux in.
-	}
-	a.r.HandleFunc("/api/conf", a.GetConfigHandler())
-	a.r.HandleFunc("/api/conf/nics", a.GetNics())
-	a.r.HandleFunc("/api/conf/nic/{mac_address}", a.GetNic()).Methods("GET")
-	a.r.HandleFunc("/api/conf/nic/{mac_address}", a.UpdateNicConfig()).Methods("PUT")
-	a.r.HandleFunc("/api/conf/nic/{mac_address}", a.DeleteNic()).Methods("DELETE")
-	a.r.HandleFunc("/api/conf/deletenics", a.DeleteAllNics()).Methods("DELETE")
-	a.r.HandleFunc("/api/conf/nic", a.CreateNicConfig()).Methods("POST")
-	a.r.HandleFunc("/api/image", a.imageUploader.UploadHandler()).Methods("POST")
-	if err := a.RegisterUITemplate(a.r); err != nil {
-		log.Fatal(err)
-	}
-	if err := srv.ListenAndServe(); err != nil {
-		log.Fatal(err)
-	}
+func (a *API) RegisterEndpoint(interfaceName string) {
+		a.r.HandleFunc(fmt.Sprintf("/api/%s/conf", interfaceName), a.GetConfigHandler())
+		a.r.HandleFunc(fmt.Sprintf("/api/%s/conf/nics", interfaceName), a.GetNics())
+		a.r.HandleFunc(fmt.Sprintf("/api/%s/conf/nic/{mac_address}", interfaceName), a.GetNic()).Methods("GET")
+		a.r.HandleFunc(fmt.Sprintf("/api/%s/conf/nic/{mac_address}", interfaceName), a.UpdateNicConfig()).Methods("PUT")
+		a.r.HandleFunc(fmt.Sprintf("/api/%s/conf/nic/{mac_address}", interfaceName), a.DeleteNic()).Methods("DELETE")
+		a.r.HandleFunc(fmt.Sprintf("/api/%s/conf/deletenics", interfaceName), a.DeleteAllNics()).Methods("DELETE")
+		a.r.HandleFunc(fmt.Sprintf("/api/%s/conf/nic", interfaceName), a.CreateNicConfig()).Methods("POST")
+		a.r.HandleFunc(fmt.Sprintf("/api/%s/image", interfaceName), a.imageUploader.UploadHandler()).Methods("POST")
+		if err := a.RegisterUITemplate(a.r); err != nil {
+			log.Fatal(err)
+		}
 }
 
 func (api *API) GetConfigHandler() http.HandlerFunc {
@@ -100,11 +82,7 @@ func (api *API) GetNic() http.HandlerFunc {
 			w.WriteHeader(404) // unprocessable entity
 			w.Write([]byte(fmt.Sprintf("nic %s does not exists", mac_address)))
 		}
-		item := ServerItem{
-			serverConfig.Ip,
-			serverConfig.Hostname,
-			mac_address,
-		}
+		item := ServerItem{serverConfig.Ip, serverConfig.Hostname, mac_address, serverConfig.Gateway, serverConfig.Netmask}
 		js, err := json.Marshal(item)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -118,11 +96,7 @@ func (api *API) GetNic() http.HandlerFunc {
 func convertToServerItems(nics map[string]config.ServerConfig) []ServerItem {
 	var items []ServerItem
 	for k,v := range nics {
-		item := ServerItem{
-			v.Ip,
-			v.Hostname,
-			k,
-		}
+		item := ServerItem{v.Ip, v.Hostname, k, v.Gateway, v.Netmask}
 		items = append(items, item)
 	}
 	return items
@@ -131,7 +105,6 @@ func convertToServerItems(nics map[string]config.ServerConfig) []ServerItem {
 
 func (api *API) UpdateNicConfig() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("update")
 		var serverConfig config.ServerConfig
 		vars := mux.Vars(r)
 		mac_address := vars["mac_address"]
@@ -200,7 +173,7 @@ func (api *API) CreateNicConfig() http.HandlerFunc {
 				w.WriteHeader(http.StatusBadRequest)
 				w.Write([]byte(err.Error()))
 			} else {
-				serverConfig := config.ServerConfig{serverItem.Ip, serverItem.Hostname}
+				serverConfig := config.ServerConfig{serverItem.Ip, serverItem.Hostname,serverItem.Gateway,  serverItem.Netmask}
 				api.cfg.Nics[convertLowerCaseDash(serverItem.MacAddress)] = serverConfig
 				w.WriteHeader(http.StatusAccepted)
 			}

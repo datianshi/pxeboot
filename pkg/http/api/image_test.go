@@ -10,7 +10,7 @@ import (
 )
 
 func TestImageUpload(t *testing.T){
-	c := &config.Config{
+	c := &config.DHCPInterface{
 		RootPath: "./fixture",
 	}
 	imageUploader := &api.ImageUploader{

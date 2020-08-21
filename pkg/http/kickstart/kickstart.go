@@ -12,10 +12,10 @@ import (
 
 type Kickstart struct {
 	r *mux.Router
-	C *config.Config
+	C *config.DHCPInterface
 }
 
-func NewKickStart(c *config.Config) *Kickstart {
+func NewKickStart(c *config.DHCPInterface) *Kickstart {
 	return &Kickstart{
 		r : mux.NewRouter(),
 		C : c,
@@ -65,12 +65,13 @@ func (k *Kickstart) Handler() http.HandlerFunc{
 		i := info{
 			IP: serverConfig.Ip,
 			HostName: serverConfig.Hostname,
-			Gateway: k.C.Gateway,
-			NetMask: k.C.Netmask,
+			Gateway: serverConfig.Gateway,
+			NetMask: serverConfig.Netmask,
 			NameServer: k.C.DNS,
 			NTPServer: k.C.NTPServer,
 			Password: k.C.Password,
 		}
+		fmt.Printf("info :%v", i)
 		t, _:= template.New("").Parse(k.C.KickStartTemplate)
 		err := t.ExecuteTemplate(w, "", i)
 		if err != nil {

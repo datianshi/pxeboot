@@ -13,10 +13,10 @@ import (
 
 type DhcpServer struct{
 	k kickstart.Kickstart
-	c config.Config
+	c config.DHCPInterface
 }
 
-func handleDHCP(cfg *config.Config, pool *ServerPool) server4.Handler {
+func handleDHCP(cfg *config.DHCPInterface, pool *ServerPool) server4.Handler {
 	return func(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) {
 		log.Print(m.Summary())
 		client_mac := m.ClientHWAddr.String()
@@ -46,7 +46,7 @@ func handleDHCP(cfg *config.Config, pool *ServerPool) server4.Handler {
 		conn.WriteTo(ret.ToBytes(), peer)
 	}
 }
-func Start(cfg *config.Config) {
+func Start(cfg *config.DHCPInterface) {
 	var port int
 	if cfg.DHCPServerPort != 0 {
 		port = cfg.DHCPServerPort
