@@ -15,8 +15,6 @@ import (
 var data string = `
 dhcp_interface: ens224
 bind_ip: 172.16.100.2
-gateway: 10.65.101.1
-netmask: 255.255.255.0
 dns: 10.192.2.10
 password: VMware1!
 nics:
@@ -24,10 +22,14 @@ nics:
     dhcp_ip: 172.16.100.100
     ip: 10.65.101.10
     hostname: vc-01.example.org
+    gateway: 10.65.101.1
+    netmask: 255.255.255.0
   00-50-56-82-61-7c:
     dhcp_ip: 172.16.100.101
     ip: 10.65.101.11
     hostname: vc-02.example.org
+    gateway: 10.65.101.1
+    netmask: 255.255.255.0
 boot_file: efi/boot/bootx64.efi
 lease_time: 500
 root_path: ./fixture/image

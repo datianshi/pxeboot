@@ -57,6 +57,14 @@
                     <label for="host_name_edit">Host Name</label>
                     <input class="form-control" id="host_name_edit" placeholder="server.example.com">
                 </div>
+                <div class="form-group">
+                    <label for="gateway_edit">Gateway</label>
+                    <input class="form-control" id="gateway_edit" placeholder="10.65.62.1">
+                </div>
+                <div class="form-group">
+                    <label for="netmask_edit">Netmask</label>
+                    <input class="form-control" id="netmask_edit" placeholder="255.255.255.0">
+                </div>
                 <button id="edit_nic_button" class="btn btn-primary">Submit</button>
                 <button id="delete_nic_button" class="btn btn-primary">Delete</button>
             </form>
@@ -75,6 +83,14 @@
                 <div class="form-group">
                     <label for="host_name_add">Host Name</label>
                     <input class="form-control" id="host_name_add" placeholder="example: server1.example.org">
+                </div>
+                <div class="form-group">
+                    <label for="gateway_add">Gateway</label>
+                    <input class="form-control" id="gateway_add" placeholder="example: 10.65.62.1">
+                </div>
+                <div class="form-group">
+                    <label for="netmask_add">Netmask</label>
+                    <input class="form-control" id="netmask_add" placeholder="255.255.255.0">
                 </div>
                 <button type="submit" class="btn btn-primary">Add</button>
             </form>

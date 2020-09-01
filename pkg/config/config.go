@@ -35,6 +35,8 @@ ntp_server: time.svc.pivotal.io
 type ServerConfig struct {
 	Ip string `yaml:"ip" json:"ip"`
 	Hostname string `yaml:"hostname" json:"hostname"`
+	Gateway string `yaml:"gateway" json:"gateway"`
+	Netmask string `yaml:"netmask" json:"netmask"`
 }
 type Config struct {
 	BindIP string `yaml:"bind_ip" json:"bind_ip"`
@@ -44,9 +46,7 @@ type Config struct {
 	DHCPServerPort int `yaml:"dhcp_server_port" json:"dhcp_server_port"`
 	TFTPServerPort int `yaml:"tftp_server_port" json:"tftp_server_port"`
 	HTTPPort int `yaml:"http_port" json:"http_port"`
-	Gateway string `yaml:"gateway" json:"gateway"`
 	NTPServer string `yaml:"ntp_server" json:"ntp_server"`
-	Netmask string `yaml:"netmask" json:"netmask"`
 	Nics map[string]ServerConfig `yaml:"nics" json:"nics"`
 	BootFile string `yaml:"boot_file" json:"boot_file"`
 	LeaseTime int `yaml:"lease_time" json:"lease_time"`
