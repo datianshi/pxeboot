@@ -33,10 +33,6 @@ dhcp_range: 172.16.100.10 - 172.16.100.100
 #tftp_server_port: 10001
 #Default 80
 #http_port: 8089
-#ESXi Servers Gateway
-gateway: 10.65.101.1
-#ESXi Servers Netmask
-netmask: 255.255.255.0
 #ESXi Servers DNS
 dns: 10.192.2.10
 #ESXi Password
@@ -48,9 +44,17 @@ nics:
     ip: 10.65.101.10
     #ESXi Host Name Assignment
     hostname: vc-01.example.org
+    #ESXi Servers Gateway
+    gateway: 10.65.101.1
+    #ESXi Servers Netmask
+    netmask: 255.255.255.0
   00-50-56-82-d8-86:
     ip: 10.65.101.11
     hostname: vc-02.example.org
+    #ESXi Servers Gateway
+    gateway: 10.65.101.1
+    #ESXi Servers Netmask
+    netmask: 255.255.255.0
 #Boot File Path. Relative to the extracted iso image folder
 boot_file: efi/boot/bootx64.efi
 #DHCP Lease time in second
