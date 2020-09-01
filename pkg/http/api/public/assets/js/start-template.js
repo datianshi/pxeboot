@@ -30,6 +30,8 @@ function load_nic(nic) {
     $("#host_name_edit").val(nic.hostname)
     $("#static_ip_edit").val(nic.ip)
     $("#mac_address_edit").val(nic.mac_address)
+    $("#gateway_edit").val(nic.gateway)
+    $("#netmask_edit").val(nic.netmask)
 }
 
 function select_nic_change(){
@@ -46,6 +48,8 @@ function submit_nic_change(){
         var putData = {}
         putData.hostname = $("#host_name_edit").val()
         putData.ip = $("#static_ip_edit").val()
+        putData.gateway = $("#gateway_edit").val()
+        putData.netmask = $("#netmask_edit").val()
         var current_mac = $("#mac_address_edit").val()
         $.ajax({
             url: "api/conf/nic/" + current_mac,
@@ -82,6 +86,8 @@ function add_nic_change(){
         postData.hostname = $("#host_name_add").val()
         postData.ip = $("#static_ip_add").val()
         postData.mac_address = $("#mac_address_add").val()
+        postData.gateway = $("#gateway_add").val()
+        postData.netmask = $("#netmask_add").val()
         $.ajax({
             url: "api/conf/nic",
             method: 'POST',

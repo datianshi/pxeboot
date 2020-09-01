@@ -65,8 +65,8 @@ func (k *Kickstart) Handler() http.HandlerFunc{
 		i := info{
 			IP: serverConfig.Ip,
 			HostName: serverConfig.Hostname,
-			Gateway: k.C.Gateway,
-			NetMask: k.C.Netmask,
+			Gateway: serverConfig.Gateway,
+			NetMask: serverConfig.Netmask,
 			NameServer: k.C.DNS,
 			NTPServer: k.C.NTPServer,
 			Password: k.C.Password,

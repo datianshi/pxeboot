@@ -12,10 +12,6 @@ dhcp_range: 172.16.100.10 - 172.16.100.100
 #tftp_server_port: 10001
 #Default 80
 #http_port: 8089
-#ESXi Servers Gateway
-gateway: 10.65.101.1
-#ESXi Servers Netmask
-netmask: 255.255.255.0
 #ESXi Servers DNS
 dns: 10.192.2.10
 #ESXi Password
@@ -27,9 +23,17 @@ nics:
     ip: 10.65.101.10
     #ESXi Host Name Assignment
     hostname: vc-01.example.org
+    #ESXi Servers Gateway
+    gateway: 10.65.101.1
+    #ESXi Servers Netmask
+    netmask: 255.255.255.0
   00-50-56-82-d8-86:
     ip: 10.65.101.11
     hostname: vc-02.example.org
+    #ESXi Servers Gateway
+    gateway: 10.65.101.1
+    #ESXi Servers Netmask
+    netmask: 255.255.255.0
 #Boot File Path. Relative to the extracted iso image folder
 boot_file: efi/boot/bootx64.efi
 #DHCP Lease time in second
@@ -47,28 +51,27 @@ kickstart_template: |
   #
 
   # Accept the VMware End User License Agreement
-    vmaccepteula
-    clearpart --overwritevmfs --alldrives
+  vmaccepteula
+  clearpart --overwritevmfs --alldrives
+  # Set the root password for the DCUI and Tech Support Mode
+  rootpw {{.Password}}
 
-    # Set the root password for the DCUI and Tech Support Mode
-    rootpw {{.Password}}
+  # Install on the first local disk available on machine
+  install --firstdisk --overwritevmfs
 
-    # Install on the first local disk available on machine
-    install --firstdisk --overwritevmfs
+  # Set the network to DHCP on the first network adapter
+  network --bootproto=static --addvmportgroup=1 --ip={{.IP}} --netmask={{.NetMask}} --gateway={{.Gateway}} --nameserver={{.NameServer}} --hostname={{.HostName}}
+  reboot
 
-    # Set the network to DHCP on the first network adapter
-    network --bootproto=static --addvmportgroup=1 --ip={{.IP}} --netmask={{.NetMask}} --gateway={{.Gateway}} --nameserver={{.NameServer}} --hostname={{.HostName}}
-    reboot
+  %firstboot --interpreter=busybox
+  vim-cmd hostsvc/enable_ssh
+  vim-cmd hostsvc/start_ssh
+  vim-cmd hostsvc/enable_esx_shell
+  vim-cmd hostsvc/start_esx_shell
+  cat > /etc/ntp.conf << __NTP_CONFIG__
+  server {{.NTPServer}}
+  __NTP_CONFIG__
 
-    %firstboot --interpreter=busybox
-    vim-cmd hostsvc/enable_ssh
-    vim-cmd hostsvc/start_ssh
-    vim-cmd hostsvc/enable_esx_shell
-    vim-cmd hostsvc/start_esx_shell
-    cat > /etc/ntp.conf << __NTP_CONFIG__
-    server {{.NTPServer}}
-    __NTP_CONFIG__
+  /sbin/chkconfig ntpd on
 
-    /sbin/chkconfig ntpd on
-
-    reboot
+  reboot
