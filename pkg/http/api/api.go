@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/datianshi/pxeboot/pkg/config"
+	"github.com/datianshi/pxeboot/pkg/model"
 	"github.com/datianshi/pxeboot/pkg/util"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/gorilla/mux"
@@ -80,7 +81,7 @@ func (api *API) GetConfigHandler() http.HandlerFunc {
 
 func (api *API) GetNics() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		js, err := json.Marshal(convertToServerItems(api.cfg.Nics))
+		js, err := json.Marshal(util.ConvertToServerItems(api.cfg.Nics))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -100,7 +101,7 @@ func (api *API) GetNic() http.HandlerFunc {
 			w.WriteHeader(404) // unprocessable entity
 			w.Write([]byte(fmt.Sprintf("nic %s does not exists", mac_address)))
 		}
-		item := ServerItem{
+		item := model.ServerItem{
 			serverConfig.Ip,
 			serverConfig.Hostname,
 			mac_address,
@@ -115,21 +116,6 @@ func (api *API) GetNic() http.HandlerFunc {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write(js)
 	}
-}
-
-func convertToServerItems(nics map[string]config.ServerConfig) []ServerItem {
-	var items []ServerItem
-	for k,v := range nics {
-		item := ServerItem{
-			v.Ip,
-			v.Hostname,
-			k,
-			v.Gateway,
-			v.Netmask,
-		}
-		items = append(items, item)
-	}
-	return items
 }
 
 
@@ -188,7 +174,7 @@ func (api *API) DeleteAllNics() http.HandlerFunc {
 
 func (api *API) CreateNicConfig() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var serverItem ServerItem
+		var serverItem model.ServerItem
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			panic(err)

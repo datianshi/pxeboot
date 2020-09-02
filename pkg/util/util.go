@@ -2,10 +2,16 @@ package util
 
 import (
 	"bufio"
+	"bytes"
+	"crypto/rand"
 	"fmt"
+	"github.com/datianshi/pxeboot/pkg/config"
+	"github.com/datianshi/pxeboot/pkg/model"
+	"github.com/oklog/ulid"
 	"io"
 	"regexp"
 	"strings"
+	"time"
 )
 const SYMLINK_PER_SERVER_DIR = "images"
 const KERNEL_FILE = "b.b00"
@@ -45,4 +51,29 @@ func BootConfigFile(src io.Reader, dst io.Writer, bindIP, nic string) {
 		}
 
 	}
+}
+
+func ConvertToServerItems(nics map[string]config.ServerConfig) []model.ServerItem {
+	var items []model.ServerItem
+	for k,v := range nics {
+		item := model.ServerItem{
+			v.Ip,
+			v.Hostname,
+			k,
+			v.Gateway,
+			v.Netmask,
+		}
+		items = append(items, item)
+	}
+	return items
+}
+
+func UUID() (string, error) {
+	t := time.Unix(1000000, 0)
+	entropy := make([]byte, 48)
+	if _, err := io.ReadFull(rand.Reader, entropy); err != nil {
+		return "", err
+	}
+	uuid := ulid.MustNew(ulid.Timestamp(t), bytes.NewReader(entropy[:])).String()
+	return uuid, nil
 }

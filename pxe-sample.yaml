@@ -1,5 +1,7 @@
 #DHCP Bind Interface
 dhcp_interface: vboxnet5
+nats:
+  hostname: 127.0.0.1
 #DHCP Server IP
 bind_ip: 192.168.99.1
 #Management IP which sit on an management network

@@ -55,6 +55,13 @@ type Config struct {
 	Password string `yaml:"password" json:"password"`
 	BootConfigFile string `yaml:"boot_config_file" json:"boot_config_file"`
 	KickStartTemplate string `yaml:"kickstart_template" json:"kickstart_template"`
+	Nats NatsConfig `yaml:"nats" json:"nats"`
+}
+
+type NatsConfig struct {
+	Hostname string `yaml:"hostname" json:"hostname"`
+	Username string `yaml:"username" json:"username"`
+	Password string `yaml:"password" json:"password"`
 }
 
 func LoadConfig(reader io.Reader) (*Config, error){
