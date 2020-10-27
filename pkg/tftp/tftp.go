@@ -40,7 +40,7 @@ func (reader *hackReader) Seek(offset int64, whence int) (int64, error) {
 	return reader.size, nil
 }
 
-func pxeReadHandler(cfg *config.Config) func(filename string, rf io.ReaderFrom) error {
+func pxeReadHandler(cfg *config.DHCPInterface) func(filename string, rf io.ReaderFrom) error {
 		//Not read from the file. Generate it dynamically
 		return func(filename string, rf io.ReaderFrom) error{
 			exist, nic := getNic(filename, cfg)
@@ -69,7 +69,7 @@ func pxeReadHandler(cfg *config.Config) func(filename string, rf io.ReaderFrom) 
 	}
 
 //Generate our own boot config file
-func bootConfig(cfg *config.Config, nic string) (*hackReader, error){
+func bootConfig(cfg *config.DHCPInterface, nic string) (*hackReader, error){
 	//fmt.Println(fmt.Sprintf("%s/%s", cfg.RootPath, cfg.BootConfigFile))
 	origin_template, err:= os.Open(fmt.Sprintf("%s/%s", cfg.RootPath, cfg.BootConfigFile))
 	if err != nil {
@@ -102,7 +102,7 @@ func bootConfig(cfg *config.Config, nic string) (*hackReader, error){
 	return ret, nil
 }
 
-func getNic(filename string, cfg *config.Config) (bool, string) {
+func getNic(filename string, cfg *config.DHCPInterface) (bool, string) {
 	for k, _ := range cfg.Nics {
 		if strings.Contains(filename, k) {
 			return true, k
@@ -111,7 +111,7 @@ func getNic(filename string, cfg *config.Config) (bool, string) {
 	return false, ""
 }
 
-func pxeWriteHandler(cfg *config.Config) func(filename string, rf io.WriterTo) error {
+func pxeWriteHandler(cfg *config.DHCPInterface) func(filename string, rf io.WriterTo) error {
 	return func(filename string, rf io.WriterTo) error{
 		fmt.Printf("Write File %s\n", filename)
 		return writeHandler(fmt.Sprintf("%s/%s", cfg.RootPath, filename), rf)
@@ -120,7 +120,7 @@ func pxeWriteHandler(cfg *config.Config) func(filename string, rf io.WriterTo) e
 
 
 
-func Start(cfg *config.Config) {
+func Start(cfg *config.DHCPInterface) {
 	var port int
 	if cfg.TFTPServerPort != 0 {
 		port = cfg.TFTPServerPort

@@ -32,25 +32,22 @@ func main() {
 	}
 
 	//start kickstart http server
-	k := kickstart.NewKickStart(cfg)
-	go func(){
-		k.Start()
-	}()
-	//Start management api server
-	if cfg.ManagementIp != "" {
-		a := api.NewAPI(cfg)
+	for _, bindingInterface := range cfg.DHCPInterfaces {
+		k := kickstart.NewKickStart(bindingInterface)
 		go func(){
-			a.Start()
+			k.Start()
 		}()
+
+		//Start TFTP
+		go func() {
+			tftp.Start(bindingInterface)
+		}()
+
+		//Start dhcp server and block
+		dhcp.Start(bindingInterface)
 	}
 
-	//Start TFTP
-	go func() {
-		tftp.Start(cfg)
-	}()
-
-
-
-	//Start dhcp server and block
-	dhcp.Start(cfg)
+	//Start management api server
+	apiServer := api.NewServer(cfg)
+	apiServer.Start()
 }
