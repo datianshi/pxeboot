@@ -1,6 +1,6 @@
 module github.com/datianshi/pxeboot
 
-go 1.13
+go 1.14
 
 require (
 	github.com/c4milo/gotoolkit v0.0.0-20190525173301-67483a18c17a // indirect

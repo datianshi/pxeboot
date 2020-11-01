@@ -1,9 +1,10 @@
 package config
 
 import (
-	"gopkg.in/yaml.v2"
 	"io"
 	"io/ioutil"
+
+	"gopkg.in/yaml.v2"
 )
 
 var data = `
@@ -33,31 +34,31 @@ ntp_server: time.svc.pivotal.io
 `
 
 type ServerConfig struct {
-	Ip string `yaml:"ip" json:"ip"`
+	Ip       string `yaml:"ip" json:"ip"`
 	Hostname string `yaml:"hostname" json:"hostname"`
-	Gateway string `yaml:"gateway" json:"gateway"`
-	Netmask string `yaml:"netmask" json:"netmask"`
+	Gateway  string `yaml:"gateway" json:"gateway"`
+	Netmask  string `yaml:"netmask" json:"netmask"`
 }
 type Config struct {
-	BindIP string `yaml:"bind_ip" json:"bind_ip"`
-	ManagementIp string `yaml:"management_ip" json:"management_ip"`
-	DNS string `yaml:"dns" json:"dns"`
-	DHCPRange string `yaml:"dhcp_range" json:"dhcp_range"`
-	DHCPServerPort int `yaml:"dhcp_server_port" json:"dhcp_server_port"`
-	TFTPServerPort int `yaml:"tftp_server_port" json:"tftp_server_port"`
-	HTTPPort int `yaml:"http_port" json:"http_port"`
-	NTPServer string `yaml:"ntp_server" json:"ntp_server"`
-	Nics map[string]ServerConfig `yaml:"nics" json:"nics"`
-	BootFile string `yaml:"boot_file" json:"boot_file"`
-	LeaseTime int `yaml:"lease_time" json:"lease_time"`
-	RootPath string `yaml:"root_path" json:"root_path"`
-	DHCPInterface string `yaml:"dhcp_interface" json:"dhcp_interface"`
-	Password string `yaml:"password" json:"password"`
-	BootConfigFile string `yaml:"boot_config_file" json:"boot_config_file"`
-	KickStartTemplate string `yaml:"kickstart_template" json:"kickstart_template"`
+	BindIP              string                  `yaml:"bind_ip" json:"bind_ip"`
+	ManagementInterface string                  `yaml:"management_interface" json:"management_interface"`
+	DNS                 string                  `yaml:"dns" json:"dns"`
+	DHCPRange           string                  `yaml:"dhcp_range" json:"dhcp_range"`
+	DHCPServerPort      int                     `yaml:"dhcp_server_port" json:"dhcp_server_port"`
+	TFTPServerPort      int                     `yaml:"tftp_server_port" json:"tftp_server_port"`
+	HTTPPort            int                     `yaml:"http_port" json:"http_port"`
+	NTPServer           string                  `yaml:"ntp_server" json:"ntp_server"`
+	Nics                map[string]ServerConfig `yaml:"nics" json:"nics"`
+	BootFile            string                  `yaml:"boot_file" json:"boot_file"`
+	LeaseTime           int                     `yaml:"lease_time" json:"lease_time"`
+	RootPath            string                  `yaml:"root_path" json:"root_path"`
+	DHCPInterface       string                  `yaml:"dhcp_interface" json:"dhcp_interface"`
+	Password            string                  `yaml:"password" json:"password"`
+	BootConfigFile      string                  `yaml:"boot_config_file" json:"boot_config_file"`
+	KickStartTemplate   string                  `yaml:"kickstart_template" json:"kickstart_template"`
 }
 
-func LoadConfig(reader io.Reader) (*Config, error){
+func LoadConfig(reader io.Reader) (*Config, error) {
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return nil, err

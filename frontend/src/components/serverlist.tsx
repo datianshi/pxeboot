@@ -7,54 +7,67 @@ import Col from 'react-bootstrap/esm/Col';
 import FormGroup from 'react-bootstrap/esm/FormGroup';
 
 
-interface NicService {
-    getServers(): ServerProp[];
-    deleteServer(hostname: string): void;
-}
+// interface NicService {
+//     getServers(): ServerProp[];
+//     deleteServer(hostname: string): void;
+// }
 
-class FakeNicService implements NicService {
-    constructor(){
-        alert('I am called')
-    }
-    mutableProps: ServerProp[] =             [
-        {
-            ip: "192.168.10.5",
-            gateway: "192.168.10.1",
-            netmask: "255.255.255.0",
-            hostname: "test-1.example.org",
-            mac_address: "00:50:A6:83:75:98"
-        },
-        {
-            ip: "192.168.10.9",
-            gateway: "192.168.10.1",
-            netmask: "255.255.255.0",
-            hostname: "test-2.example.org",
-            mac_address: "00:50:A6:83:75:97"
-        },
-        {
-            ip: "192.168.10.10",
-            gateway: "192.168.10.1",
-            netmask: "255.255.255.0",
-            hostname: "test-3.example.org",
-            mac_address: "00:50:A6:83:75:95"
-        }               
-    ]
+// class FakeNicService implements NicService {
+//     constructor(){
+//         alert('I am the real nic service')
+//     }
 
-    deleteServer(hostname: string) {
-        this.mutableProps = this.mutableProps.filter(s => s.hostname !== hostname)
-    }
-    getServers(): ServerProp[] {
-        return (
-            this.mutableProps
-        )
-    }
+//     getServers(): ServerProp[] {
+//         throw new Error('Method not implemented.');
+//     }
+//     deleteServer(hostname: string): void {
+//         throw new Error('Method not implemented.');
+//     }
+// }
 
-}
+// class FakeNicService implements NicService {
+//     constructor(){
+//         alert('I am called')
+//     }
+//     mutableProps: ServerProp[] =             [
+//         {
+//             ip: "192.168.10.5",
+//             gateway: "192.168.10.1",
+//             netmask: "255.255.255.0",
+//             hostname: "test-1.example.org",
+//             mac_address: "00:50:A6:83:75:98"
+//         },
+//         {
+//             ip: "192.168.10.9",
+//             gateway: "192.168.10.1",
+//             netmask: "255.255.255.0",
+//             hostname: "test-2.example.org",
+//             mac_address: "00:50:A6:83:75:97"
+//         },
+//         {
+//             ip: "192.168.10.10",
+//             gateway: "192.168.10.1",
+//             netmask: "255.255.255.0",
+//             hostname: "test-3.example.org",
+//             mac_address: "00:50:A6:83:75:95"
+//         }               
+//     ]
 
-export {FakeNicService}
+//     deleteServer(hostname: string) {
+//         this.mutableProps = this.mutableProps.filter(s => s.hostname !== hostname)
+//     }
+//     getServers(): ServerProp[] {
+//         return (
+//             this.mutableProps
+//         )
+//     }
+
+// }
+
+// export {FakeNicService}
 
 interface MyProp {
-    nicService: NicService;
+    // nicService: NicService;
 }
 
 interface MyState {
@@ -67,34 +80,60 @@ class ServerForm extends Component<MyProp, MyState>{
     state: MyState;
     constructor(props: MyProp) {
         super(props)
-        let response: ServerProp[] = props.nicService.getServers()
         this.state = {
-            availableServers: response,
-            currentServer: response[0]
+            availableServers: [],
         }
         this.selectHost = this.selectHost.bind(this);
         this.deleteHost = this.deleteHost.bind(this);
+        this.getServers = this.getServers.bind(this);
     }
+
+    getServers() {
+        alert('refresh')
+        fetch("/api/conf/nics")
+        .then(res => res.json())
+        .then(
+          (result) => {
+            this.setState({
+              availableServers: result,
+              currentServer: result[0]
+            });
+          },
+          (error) => {
+            alert(error)
+            this.setState({
+            });
+          }
+        )
+    }
+
+    componentDidMount() {
+        this.getServers()
+      }    
 
     selectHost(e: ChangeEvent<HTMLSelectElement>) {        
         var s: MyState = {
-            availableServers: this.props.nicService.getServers() 
+            availableServers: this.state.availableServers
         }
-        s.currentServer = this.props.nicService.getServers().find(server => server.hostname === e.target.value)
+        s.currentServer = this.state.availableServers.find(server => server.hostname === e.target.value)
         this.setState(s)
     }
 
-    deleteHost(e: MouseEvent<HTMLButtonElement>) {        
-        if (this.state.currentServer != null && this.state.currentServer.hostname != null) {
-            alert('delete, Hello')
-            this.props.nicService.deleteServer(this.state.currentServer.hostname)
+    deleteHost(e: MouseEvent<HTMLButtonElement>) {
+        if (this.state.currentServer == null) {
+            return
         }
-        var s: MyState = {
-            availableServers: this.props.nicService.getServers() 
-        }
-        alert(s.availableServers.length)
-        s.currentServer = s.availableServers.length === 0 ? undefined : s.availableServers[0]
-        this.setState(s)
+        const url = "api/conf/nic/" + this.state.currentServer.mac_address
+        alert(url)
+        fetch(url, {method: 'DELETE'})
+          .then(
+            (resp) => {
+                this.getServers()
+            },
+            (error) => {
+              alert(error)
+            }
+        )                
     }
 
     render() {
@@ -107,25 +146,22 @@ class ServerForm extends Component<MyProp, MyState>{
                             <Form.Label>Host Name</Form.Label>
                             <Form.Control as="select" onChange={this.selectHost}>
                                 {this.state.availableServers.map( server => 
-                                <option>{server.hostname}</option>
+                                <option key={server.hostname}>{server.hostname}</option>
                                 )}
                             </Form.Control>
                             <Form.Text className="text-muted">
                             ESX Host Name
                             </Form.Text>                                                 
                         </FormGroup>
-                        <Server serverProp={this.state.currentServer} edit={false}/>
-                        <Button variant="primary" type="submit" disabled={this.state.currentServer === undefined} onClick={this.deleteHost}> 
+                        <Server serverProp={this.state.currentServer} edit={false} refresh={this.getServers}/>
+                        <Button variant="primary" disabled={this.state.currentServer === undefined} onClick={this.deleteHost}> 
                             Delete
                         </Button>                
                     </Form>                
                 </Col>
                 <Col>
                     <Form>
-                        <Server edit={true}/>
-                        <Button variant="primary" type="submit"> 
-                            Add
-                        </Button>                
+                        <Server edit={true} refresh={this.getServers}/>
                     </Form>
                 </Col>
             </Row>

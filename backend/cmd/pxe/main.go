@@ -3,13 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
+	"os"
+
 	"github.com/datianshi/pxeboot/pkg/config"
 	"github.com/datianshi/pxeboot/pkg/dhcp"
 	"github.com/datianshi/pxeboot/pkg/http/api"
 	"github.com/datianshi/pxeboot/pkg/http/kickstart"
 	"github.com/datianshi/pxeboot/pkg/tftp"
-	"log"
-	"os"
 )
 
 func main() {
@@ -33,13 +34,13 @@ func main() {
 
 	//start kickstart http server
 	k := kickstart.NewKickStart(cfg)
-	go func(){
+	go func() {
 		k.Start()
 	}()
 	//Start management api server
-	if cfg.ManagementIp != "" {
+	if cfg.ManagementInterface != "" {
 		a := api.NewAPI(cfg)
-		go func(){
+		go func() {
 			a.Start()
 		}()
 	}
@@ -48,8 +49,6 @@ func main() {
 	go func() {
 		tftp.Start(cfg)
 	}()
-
-
 
 	//Start dhcp server and block
 	dhcp.Start(cfg)

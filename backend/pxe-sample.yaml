@@ -1,74 +1,37 @@
-#DHCP Bind Interface
-dhcp_interface: vboxnet5
-#DHCP Server IP
-bind_ip: 192.168.99.1
-#Management IP which sit on an management network
-management_ip: 192.168.62.1
-#DHCP Range
+dhcp_interface: net1
+bind_ip: 172.16.100.2
 dhcp_range: 172.16.100.10 - 172.16.100.100
-#Default 67
-#dhcp_server_port: 10000
-#Default 69
-#tftp_server_port: 10001
-#Default 80
-#http_port: 8089
-#ESXi Servers DNS
 dns: 10.192.2.10
-#ESXi Password
 password: VMware1!
-nics:
-  #ESXi Nic Address
-  00-50-56-82-70-2a:
-    #ESXi Static IP Assignment
-    ip: 10.65.101.10
-    #ESXi Host Name Assignment
-    hostname: vc-01.example.org
-    #ESXi Servers Gateway
-    gateway: 10.65.101.1
-    #ESXi Servers Netmask
-    netmask: 255.255.255.0
-  00-50-56-82-d8-86:
-    ip: 10.65.101.11
-    hostname: vc-02.example.org
-    #ESXi Servers Gateway
-    gateway: 10.65.101.1
-    #ESXi Servers Netmask
-    netmask: 255.255.255.0
-#Boot File Path. Relative to the extracted iso image folder
+management_ip: 10.65.144.
+nics: {}
 boot_file: efi/boot/bootx64.efi
-#DHCP Lease time in second
 lease_time: 500
-#TFTP Root Path, which is the extracted iso image folder
-root_path: /Users/sding/image
-#ESXi ntp server
+root_path: /home/ubuntu/images
 ntp_server: time.svc.pivotal.io
-#boot config file, which comes with iso image. Used to interpolate values
 boot_config_file: efi/boot/boot.cfg
-#kick start template with variables -> password, ip, netmask, gateway, nameserver, ntpserver and hostname
 kickstart_template: |
   #
   # Sample scripted installation file
-  #
-
   # Accept the VMware End User License Agreement
   vmaccepteula
   clearpart --overwritevmfs --alldrives
   # Set the root password for the DCUI and Tech Support Mode
-  rootpw {{.Password}}
-
+  rootpw VMware1!
   # Install on the first local disk available on machine
-  install --firstdisk --overwritevmfs
-
+  install --firstdisk="DELLBOSS VD",Hypervisor_0,HV,usb,IDSDM --overwritevmfs --novmfsondisk
+  #install --firstdisk --overwritevmfs
   # Set the network to DHCP on the first network adapter
   network --bootproto=static --addvmportgroup=1 --ip={{.IP}} --netmask={{.NetMask}} --gateway={{.Gateway}} --nameserver={{.NameServer}} --hostname={{.HostName}}
   reboot
-
   %firstboot --interpreter=busybox
   vim-cmd hostsvc/enable_ssh
   vim-cmd hostsvc/start_ssh
   vim-cmd hostsvc/enable_esx_shell
   vim-cmd hostsvc/start_esx_shell
   cat > /etc/ntp.conf << __NTP_CONFIG__
+  restrict default kod nomodify notrap noquerynopeer
+  restrict 127.0.0.1
   server {{.NTPServer}}
   __NTP_CONFIG__
 
