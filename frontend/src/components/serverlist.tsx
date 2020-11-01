@@ -5,6 +5,7 @@ import Button from 'react-bootstrap/Button'
 import Row from 'react-bootstrap/esm/Row';
 import Col from 'react-bootstrap/esm/Col';
 import FormGroup from 'react-bootstrap/esm/FormGroup';
+import Upload from './upload'
 
 
 // interface NicService {
@@ -89,7 +90,6 @@ class ServerForm extends Component<MyProp, MyState>{
     }
 
     getServers() {
-        alert('refresh')
         fetch("/api/conf/nics")
         .then(res => res.json())
         .then(
@@ -164,6 +164,12 @@ class ServerForm extends Component<MyProp, MyState>{
                         <Server edit={true} refresh={this.getServers}/>
                     </Form>
                 </Col>
+            </Row>
+            <Row>
+                <Col>
+                    <Upload/>    
+                </Col>
+                <Col/>
             </Row>
             </>
         );

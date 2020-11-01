@@ -55,14 +55,14 @@ func (a *API) Start() {
 		IdleTimeout:  time.Second * 60,
 		Handler:      a.r, // Pass our instance of gorilla/mux in.
 	}
-	a.r.HandleFunc("/api/conf", a.GetConfigHandler())
-	a.r.HandleFunc("/api/conf/nics", a.GetNics())
-	a.r.HandleFunc("/api/conf/nic/{mac_address}", a.GetNic()).Methods("GET")
-	a.r.HandleFunc("/api/conf/nic/{mac_address}", a.UpdateNicConfig()).Methods("PUT")
-	a.r.HandleFunc("/api/conf/nic/{mac_address}", a.DeleteNic()).Methods("DELETE")
-	a.r.HandleFunc("/api/conf/deletenics", a.DeleteAllNics()).Methods("DELETE")
-	a.r.HandleFunc("/api/conf/nic", a.CreateNicConfig()).Methods("POST")
-	a.r.HandleFunc("/api/image", a.imageUploader.UploadHandler()).Methods("POST")
+	a.r.HandleFunc("/conf", a.GetConfigHandler())
+	a.r.HandleFunc("/conf/nics", a.GetNics())
+	a.r.HandleFunc("/conf/nic/{mac_address}", a.GetNic()).Methods("GET")
+	a.r.HandleFunc("/conf/nic/{mac_address}", a.UpdateNicConfig()).Methods("PUT")
+	a.r.HandleFunc("/conf/nic/{mac_address}", a.DeleteNic()).Methods("DELETE")
+	a.r.HandleFunc("/conf/deletenics", a.DeleteAllNics()).Methods("DELETE")
+	a.r.HandleFunc("/conf/nic", a.CreateNicConfig()).Methods("POST")
+	a.r.HandleFunc("/image", a.imageUploader.UploadHandler()).Methods("POST")
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatal(err)
 	}

@@ -8,14 +8,19 @@ import Card from 'react-bootstrap/Card'
 
 function App() {
   return (
+    <>
     <div className="App">
-      <Card>
+      <Card bg="dark" text="light">
         <Card.Header>PXE Boot Server UI</Card.Header>
       </Card>            
       <Container className="mt-5">
         <ServerForm/>
       </Container>
     </div>
+    <footer className='footer mt-auto py-3 bg-dark text-white'>
+      <div className='container'></div>
+    </footer>
+    </>    
   );
 }
 
