@@ -34,10 +34,11 @@ ntp_server: time.svc.pivotal.io
 `
 
 type ServerConfig struct {
-	Ip       string `yaml:"ip" json:"ip"`
-	Hostname string `yaml:"hostname" json:"hostname"`
-	Gateway  string `yaml:"gateway" json:"gateway"`
-	Netmask  string `yaml:"netmask" json:"netmask"`
+	Ip         string `yaml:"ip" json:"ip"`
+	Hostname   string `yaml:"hostname" json:"hostname"`
+	Gateway    string `yaml:"gateway" json:"gateway"`
+	Netmask    string `yaml:"netmask" json:"netmask"`
+	MacAddress string `yaml:"mac_address" json:"mac_address"`
 }
 type Config struct {
 	BindIP              string                  `yaml:"bind_ip" json:"bind_ip"`
@@ -56,6 +57,15 @@ type Config struct {
 	Password            string                  `yaml:"password" json:"password"`
 	BootConfigFile      string                  `yaml:"boot_config_file" json:"boot_config_file"`
 	KickStartTemplate   string                  `yaml:"kickstart_template" json:"kickstart_template"`
+	Database            Database                `yaml:"database" json:"database"`
+}
+
+type Database struct {
+	Username     string `yaml:"username" json:"username"`
+	Password     string `yaml:"password" json:"password"`
+	Host         string `yaml:"host" json:"host"`
+	Port         int    `yaml:"port" json:"port"`
+	DatabaseName string `yaml:"database_name" json:"database_name"`
 }
 
 func LoadConfig(reader io.Reader) (*Config, error) {

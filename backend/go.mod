@@ -13,6 +13,7 @@ require (
 	github.com/hugelgupf/socketpair v0.0.0-20190730060125-05d35a94e714 // indirect
 	github.com/insomniacslk/dhcp v0.0.0-20200806210722-3f14f7f8bd9c
 	github.com/karrick/godirwalk v1.16.1 // indirect
+	github.com/lib/pq v1.8.0
 	github.com/mdlayher/ethernet v0.0.0-20190606142754-0394541c37b7 // indirect
 	github.com/mdlayher/raw v0.0.0-20191009151244-50f2db8cc065 // indirect
 	github.com/pin/tftp v2.1.0+incompatible
