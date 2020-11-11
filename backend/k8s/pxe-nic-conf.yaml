@@ -1,0 +1,19 @@
+apiVersion: "k8s.cni.cncf.io/v1"
+kind: NetworkAttachmentDefinition
+metadata:
+  name: pxe-nic-conf
+spec:
+  config: '{
+      "cniVersion": "0.4.0",
+      "type": "vlan",
+      "master": "eth0",
+      "vlanId": 1117,
+      "ipam": {
+        "type": "static",
+    		"addresses": [
+    			{
+    				"address": "172.16.100.2/24"
+    			}
+    		]
+      }
+    }'

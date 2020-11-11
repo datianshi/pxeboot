@@ -63,27 +63,27 @@ spec:
   template:
     metadata:
       annotations:
-        k8s.v1.cni.cncf.io/networks: vlan-dhcp-conf
+        k8s.v1.cni.cncf.io/networks: pxe-nic-conf
       labels:
         app: pxeboot
     spec:
       containers:
         - name: pxeboot
-          image: datianshi/pxeboot
+          image: datianshi/pxeboot:1.0
           ports:
           - containerPort: 80
           volumeMounts:
             - name: config-volume
               mountPath: /data
             - name: image-volume
-              mountPath: /image              
+              mountPath: /image
       volumes:
         - name: config-volume
           configMap:
             name: pxeboot-config
         - name: image-volume
           persistentVolumeClaim:
-            claimName: pxeboot-image-pvc    
+            claimName: pxeboot-image-pvc
 ---
 apiVersion: v1
 kind: Service
@@ -105,4 +105,4 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 5Gi      
+      storage: 5Gi
