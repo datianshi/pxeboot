@@ -1,4 +1,5 @@
-create database pxeboot;
+-- +goose Up
+-- SQL in this section is executed when the migration is applied.
 CREATE TABLE SERVER (
 	server_id serial PRIMARY KEY,
 	mac_address VARCHAR ( 50 ) UNIQUE NOT NULL,
