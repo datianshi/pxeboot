@@ -68,18 +68,16 @@ type FakeService struct {
 		result1 []model.ServerConfig
 		result2 error
 	}
-	UpdateServerStub        func(model.ServerConfig) (model.ServerConfig, error)
+	UpdateServerStub        func(model.ServerConfig) error
 	updateServerMutex       sync.RWMutex
 	updateServerArgsForCall []struct {
 		arg1 model.ServerConfig
 	}
 	updateServerReturns struct {
-		result1 model.ServerConfig
-		result2 error
+		result1 error
 	}
 	updateServerReturnsOnCall map[int]struct {
-		result1 model.ServerConfig
-		result2 error
+		result1 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
@@ -383,7 +381,7 @@ func (fake *FakeService) GetServersReturnsOnCall(i int, result1 []model.ServerCo
 	}{result1, result2}
 }
 
-func (fake *FakeService) UpdateServer(arg1 model.ServerConfig) (model.ServerConfig, error) {
+func (fake *FakeService) UpdateServer(arg1 model.ServerConfig) error {
 	fake.updateServerMutex.Lock()
 	ret, specificReturn := fake.updateServerReturnsOnCall[len(fake.updateServerArgsForCall)]
 	fake.updateServerArgsForCall = append(fake.updateServerArgsForCall, struct {
@@ -397,9 +395,9 @@ func (fake *FakeService) UpdateServer(arg1 model.ServerConfig) (model.ServerConf
 		return stub(arg1)
 	}
 	if specificReturn {
-		return ret.result1, ret.result2
+		return ret.result1
 	}
-	return fakeReturns.result1, fakeReturns.result2
+	return fakeReturns.result1
 }
 
 func (fake *FakeService) UpdateServerCallCount() int {
@@ -408,7 +406,7 @@ func (fake *FakeService) UpdateServerCallCount() int {
 	return len(fake.updateServerArgsForCall)
 }
 
-func (fake *FakeService) UpdateServerCalls(stub func(model.ServerConfig) (model.ServerConfig, error)) {
+func (fake *FakeService) UpdateServerCalls(stub func(model.ServerConfig) error) {
 	fake.updateServerMutex.Lock()
 	defer fake.updateServerMutex.Unlock()
 	fake.UpdateServerStub = stub
@@ -421,30 +419,27 @@ func (fake *FakeService) UpdateServerArgsForCall(i int) model.ServerConfig {
 	return argsForCall.arg1
 }
 
-func (fake *FakeService) UpdateServerReturns(result1 model.ServerConfig, result2 error) {
+func (fake *FakeService) UpdateServerReturns(result1 error) {
 	fake.updateServerMutex.Lock()
 	defer fake.updateServerMutex.Unlock()
 	fake.UpdateServerStub = nil
 	fake.updateServerReturns = struct {
-		result1 model.ServerConfig
-		result2 error
-	}{result1, result2}
+		result1 error
+	}{result1}
 }
 
-func (fake *FakeService) UpdateServerReturnsOnCall(i int, result1 model.ServerConfig, result2 error) {
+func (fake *FakeService) UpdateServerReturnsOnCall(i int, result1 error) {
 	fake.updateServerMutex.Lock()
 	defer fake.updateServerMutex.Unlock()
 	fake.UpdateServerStub = nil
 	if fake.updateServerReturnsOnCall == nil {
 		fake.updateServerReturnsOnCall = make(map[int]struct {
-			result1 model.ServerConfig
-			result2 error
+			result1 error
 		})
 	}
 	fake.updateServerReturnsOnCall[i] = struct {
-		result1 model.ServerConfig
-		result2 error
-	}{result1, result2}
+		result1 error
+	}{result1}
 }
 
 func (fake *FakeService) Invocations() map[string][][]interface{} {

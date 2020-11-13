@@ -77,3 +77,74 @@ func (db *Database) FindServer(macAddress string) (model.ServerConfig, error) {
 	}
 	return server, nil
 }
+
+//DeleteServer delete a server from database
+func (db *Database) DeleteServer(macAddress string) error {
+	sqlStatement := `delete from server where mac_address=$1`
+	var err error
+	var database *sql.DB
+	if database, err = db.openConnection(); err != nil {
+		return err
+	}
+	if _, err = database.Exec(sqlStatement, macAddress); err != nil {
+		return err
+	}
+	return nil
+}
+
+//CreateServer Create a server and persist to database
+func (db *Database) CreateServer(cfg model.ServerConfig) (model.ServerConfig, error) {
+	sqlStatement := `
+	INSERT INTO server (gateway, hostname, ip, netmask, mac_address, created_on)
+	VALUES ($1, $2, $3, $4, $5, current_timestamp)
+	RETURNING id`
+	var err error
+	var database *sql.DB
+	var id int64
+	if database, err = db.openConnection(); err != nil {
+		return model.ServerConfig{}, err
+	}
+	if err = database.QueryRow(sqlStatement, cfg.Gateway, cfg.Hostname, cfg.Ip, cfg.Netmask, cfg.MacAddress).Scan(&id); err != nil {
+		return model.ServerConfig{}, err
+	}
+
+	return model.ServerConfig{
+		ID:         id,
+		Gateway:    cfg.Gateway,
+		Netmask:    cfg.Netmask,
+		Ip:         cfg.Ip,
+		MacAddress: cfg.MacAddress,
+		Hostname:   cfg.Hostname,
+	}, nil
+}
+
+//UpdateServer Update Server with server config information
+func (db *Database) UpdateServer(cfg model.ServerConfig) error {
+	sqlStatement := `
+	update server 
+	set gateway = $1, hostname = $2, ip = $3, netmask = $4
+	where mac_address=$5`
+	var err error
+	var database *sql.DB
+	if database, err = db.openConnection(); err != nil {
+		return err
+	}
+	if _, err = database.Exec(sqlStatement, cfg.Gateway, cfg.Hostname, cfg.Ip, cfg.Netmask, cfg.MacAddress); err != nil {
+		return err
+	}
+	return nil
+}
+
+//DeleteAll Delele all server records
+func (db *Database) DeleteAll() error {
+	sqlStatement := `delete from server`
+	var err error
+	var database *sql.DB
+	if database, err = db.openConnection(); err != nil {
+		return err
+	}
+	if _, err = database.Exec(sqlStatement); err != nil {
+		return err
+	}
+	return nil
+}

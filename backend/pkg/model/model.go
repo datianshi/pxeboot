@@ -9,7 +9,7 @@ import (
 
 //ServerConfig Server config
 type ServerConfig struct {
-	ID         int    `yaml:"id" json:"id"`
+	ID         int64  `yaml:"id" json:"id"`
 	Ip         string `yaml:"ip" json:"ip"`
 	Hostname   string `yaml:"hostname" json:"hostname"`
 	Gateway    string `yaml:"gateway" json:"gateway"`

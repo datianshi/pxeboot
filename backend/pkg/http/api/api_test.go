@@ -50,8 +50,8 @@ func TestUpdateNicConfig(t *testing.T) {
 }`
 
 	nicService := &nicfakes.FakeService{}
-	nicService.UpdateServerStub = func(n model.ServerConfig) (model.ServerConfig, error) {
-		return n, nil
+	nicService.UpdateServerStub = func(n model.ServerConfig) error {
+		return nil
 	}
 
 	router, a := setupAPI(t, nicService)
@@ -64,18 +64,8 @@ func TestUpdateNicConfig(t *testing.T) {
 		t.Errorf("Expect update server to be called once")
 	}
 
-	ret, _ := ioutil.ReadAll(w.Result().Body)
-	var server model.ServerConfig
-	if err := json.Unmarshal(ret, &server); err != nil {
-		t.Errorf("Invalid Response")
-	}
-
 	if w.Result().StatusCode != http.StatusAccepted {
 		t.Errorf("Expected the http status code %d, but got %d", http.StatusAccepted, w.Result().StatusCode)
-	}
-
-	if server.Ip != "10.65.101.31" {
-		t.Errorf("Expected server update to %s, but got %s", "10.65.101.31", server.Ip)
 	}
 
 }

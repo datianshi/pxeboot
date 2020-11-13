@@ -168,7 +168,7 @@ func (a *API) UpdateNicConfig() http.HandlerFunc {
 				panic(err)
 			}
 		} else {
-			if serverConfig, err = a.nicService.UpdateServer(serverConfig); err != nil {
+			if err = a.nicService.UpdateServer(serverConfig); err != nil {
 				w.WriteHeader(422)
 				w.Write([]byte(fmt.Sprintf("Update failed with %v", err)))
 				return
@@ -179,7 +179,6 @@ func (a *API) UpdateNicConfig() http.HandlerFunc {
 				w.Write([]byte(fmt.Sprintf("Unknown return body %v", serverConfig)))
 				return
 			}
-			w.Write(body)
 		}
 	}
 }
