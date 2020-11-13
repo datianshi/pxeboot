@@ -2,7 +2,6 @@ package db_test
 
 import (
 	"bytes"
-	"fmt"
 	"testing"
 	"time"
 
@@ -59,16 +58,22 @@ func TestDBConnection(t *testing.T) {
 	database := db.NewDatabase(cfg.Database)
 
 	servers, err := database.GetServers()
+
 	if err != nil {
-		t.Errorf("Can not connect to the database %v, the error is %v", cfg.Database, err)
+		t.Errorf("Can not get servers %v", err)
 	}
 
-	if len(servers) == 0 {
-		t.Errorf("Expect more than 0 records return")
+	if len(servers) != 2 {
+		t.Errorf("Expect 2 records return but got", len(servers))
 	}
 
-	fmt.Println(servers[0].Hostname)
-	fmt.Println(servers[0].MacAddress)
+	server, err := database.FindServer("00-50-56-82-78-2a")
+	if err != nil {
+		t.Errorf("Can not get server with mac address 00-50-56-82-78-2a %v", err)
+	}
+	if server.Ip != "10.65.123.21" {
+		t.Errorf("Can not retrieve the correct server with mac address 00-50-56-82-78-2a err %v", err)
+	}
 
 }
 

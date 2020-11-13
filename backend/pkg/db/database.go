@@ -48,17 +48,32 @@ func (db *Database) GetServers() ([]model.ServerConfig, error) {
 	if database, err = db.openConnection(); err != nil {
 		return nil, err
 	}
-	if rows, err = database.Query("select gateway, hostname, ip, netmask, mac_address from server"); err != nil {
+	if rows, err = database.Query("select id, gateway, hostname, ip, netmask, mac_address from server"); err != nil {
 		return nil, err
 	}
 	var servers []model.ServerConfig
 	for rows.Next() {
 		var server model.ServerConfig
-		if err = rows.Scan(&server.Gateway, &server.Hostname, &server.Ip, &server.Netmask, &server.MacAddress); err != nil {
+		if err = rows.Scan(&server.ID, &server.Gateway, &server.Hostname, &server.Ip, &server.Netmask, &server.MacAddress); err != nil {
 			return nil, err
 		}
 		servers = append(servers, server)
 	}
 	return servers, nil
+}
 
+//FindServer Retrieve the server from database
+func (db *Database) FindServer(macAddress string) (model.ServerConfig, error) {
+	sqlStatement := `select id, gateway, hostname, ip, netmask, mac_address FROM server WHERE mac_address=$1;`
+	var err error
+	var server model.ServerConfig
+	var database *sql.DB
+	if database, err = db.openConnection(); err != nil {
+		return model.ServerConfig{}, err
+	}
+	row := database.QueryRow(sqlStatement, macAddress)
+	if err = row.Scan(&server.ID, &server.Gateway, &server.Hostname, &server.Ip, &server.Netmask, &server.MacAddress); err != nil {
+		return model.ServerConfig{}, err
+	}
+	return server, nil
 }

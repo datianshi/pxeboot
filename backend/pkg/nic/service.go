@@ -31,7 +31,7 @@ type DefaultService struct {
 
 //GetServers get servers
 func (service *DefaultService) GetServers() ([]model.ServerConfig, error) {
-	return nil, nil
+	return service.dao.GetServers()
 }
 
 //FindServer based on the mac address
