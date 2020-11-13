@@ -56,7 +56,7 @@ func TestDBConnection(t *testing.T) {
 	}
 
 	//Test
-	database := db.NewDatabase(cfg)
+	database := db.NewDatabase(cfg.Database)
 
 	servers, err := database.GetServers()
 	if err != nil {

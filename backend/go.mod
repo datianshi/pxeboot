@@ -15,12 +15,12 @@ require (
 	github.com/insomniacslk/dhcp v0.0.0-20200806210722-3f14f7f8bd9c
 	github.com/karrick/godirwalk v1.16.1 // indirect
 	github.com/lib/pq v1.8.0
+	github.com/maxbrunsfeld/counterfeiter/v6 v6.3.0 // indirect
 	github.com/mdlayher/ethernet v0.0.0-20190606142754-0394541c37b7 // indirect
 	github.com/mdlayher/raw v0.0.0-20191009151244-50f2db8cc065 // indirect
 	github.com/nwaples/rardecode v1.1.0 // indirect
 	github.com/pierrec/lz4 v2.6.0+incompatible // indirect
 	github.com/pin/tftp v2.1.0+incompatible
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pressly/goose v2.6.0+incompatible
 	github.com/rogpeppe/go-internal v1.6.1 // indirect
 	github.com/sirupsen/logrus v1.6.0 // indirect
@@ -29,8 +29,6 @@ require (
 	github.com/u-root/u-root v6.0.0+incompatible // indirect
 	github.com/ulikunitz/xz v0.5.8 // indirect
 	golang.org/x/crypto v0.0.0-20200728195943-123391ffb6de // indirect
-	golang.org/x/net v0.0.0-20200625001655-4c5254603344 // indirect
-	golang.org/x/sync v0.0.0-20200625203802-6e8e738ad208 // indirect
-	golang.org/x/sys v0.0.0-20200819171115-d785dc25833f // indirect
 	gopkg.in/yaml.v2 v2.3.0
+	k8s.io/apimachinery v0.19.3
 )

@@ -7,9 +7,11 @@ import (
 	"os"
 
 	"github.com/datianshi/pxeboot/pkg/config"
+	"github.com/datianshi/pxeboot/pkg/db"
 	"github.com/datianshi/pxeboot/pkg/dhcp"
 	"github.com/datianshi/pxeboot/pkg/http/api"
 	"github.com/datianshi/pxeboot/pkg/http/kickstart"
+	"github.com/datianshi/pxeboot/pkg/nic"
 	"github.com/datianshi/pxeboot/pkg/tftp"
 )
 
@@ -33,13 +35,15 @@ func main() {
 	}
 
 	//start kickstart http server
-	k := kickstart.NewKickStart(cfg)
+	database := db.NewDatabase(cfg.Database)
+	nicService := nic.NewService(database)
+	k := kickstart.NewKickStart(cfg, nicService)
 	go func() {
 		k.Start()
 	}()
 	//Start management api server
 	if cfg.ManagementInterface != "" {
-		a := api.NewAPI(cfg)
+		a := api.NewAPI(cfg, nicService)
 		go func() {
 			a.Start()
 		}()
@@ -47,9 +51,9 @@ func main() {
 
 	//Start TFTP
 	go func() {
-		tftp.Start(cfg)
+		tftp.Start(cfg, nicService)
 	}()
 
 	//Start dhcp server and block
-	dhcp.Start(cfg)
+	dhcp.Start(cfg, nicService)
 }

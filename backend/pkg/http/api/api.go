@@ -1,9 +1,7 @@
 package api
 
-import "C"
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -13,29 +11,33 @@ import (
 	"time"
 
 	"github.com/datianshi/pxeboot/pkg/config"
+	"github.com/datianshi/pxeboot/pkg/model"
+	"github.com/datianshi/pxeboot/pkg/nic"
 	"github.com/datianshi/pxeboot/pkg/util"
-	"github.com/gobuffalo/packr/v2"
 	"github.com/gorilla/mux"
 )
 
+//API api
 type API struct {
 	r             *mux.Router
-	cfg           *config.Config
+	cfg           config.Config
 	imageUploader *ImageUploader
-	htmlBox       *packr.Box
+	nicService    nic.Service
 }
 
-func NewAPI(c *config.Config) *API {
+//NewAPI NewAPI
+func NewAPI(c config.Config, nicService nic.Service) *API {
 	return &API{
 		r:   mux.NewRouter(),
 		cfg: c,
 		imageUploader: &ImageUploader{
 			c,
 		},
-		htmlBox: packr.New("html", "./public"),
+		nicService: nicService,
 	}
 }
 
+//Start Start
 func (a *API) Start() {
 	var port int
 	if a.cfg.HTTPPort != 0 {
@@ -91,9 +93,10 @@ func getInterfaceIpv4Addr(interfaceName string) (addr string, err error) {
 	return ipv4Addr.String(), nil
 }
 
-func (api *API) GetConfigHandler() http.HandlerFunc {
+//GetConfigHandler getConfig Handler
+func (a *API) GetConfigHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		js, err := json.Marshal(api.cfg)
+		js, err := json.Marshal(a.cfg)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -103,9 +106,15 @@ func (api *API) GetConfigHandler() http.HandlerFunc {
 	}
 }
 
-func (api *API) GetNics() http.HandlerFunc {
+//GetNics getNics
+func (a *API) GetNics() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		js, err := json.Marshal(convertToServerItems(api.cfg.Nics))
+		items, err := a.nicService.GetServers()
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		js, err := json.Marshal(items)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -115,22 +124,15 @@ func (api *API) GetNics() http.HandlerFunc {
 	}
 }
 
-func (api *API) GetNic() http.HandlerFunc {
+//GetNic GetNic
+func (a *API) GetNic() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var serverConfig config.ServerConfig
 		vars := mux.Vars(r)
-		mac_address := vars["mac_address"]
-		serverConfig, found := api.cfg.Nics[mac_address]
-		if !found {
+		macAddress := vars["mac_address"]
+		item, err := a.nicService.FindServer(macAddress)
+		if err != nil {
 			w.WriteHeader(404) // unprocessable entity
-			w.Write([]byte(fmt.Sprintf("nic %s does not exists", mac_address)))
-		}
-		item := ServerItem{
-			serverConfig.Ip,
-			serverConfig.Hostname,
-			mac_address,
-			serverConfig.Gateway,
-			serverConfig.Netmask,
+			w.Write([]byte(fmt.Sprintf("nic %s does not exists", macAddress)))
 		}
 		js, err := json.Marshal(item)
 		if err != nil {
@@ -142,32 +144,17 @@ func (api *API) GetNic() http.HandlerFunc {
 	}
 }
 
-func convertToServerItems(nics map[string]config.ServerConfig) []ServerItem {
-	var items []ServerItem
-	for k, v := range nics {
-		item := ServerItem{
-			v.Ip,
-			v.Hostname,
-			k,
-			v.Gateway,
-			v.Netmask,
-		}
-		items = append(items, item)
-	}
-	return items
-}
-
-func (api *API) UpdateNicConfig() http.HandlerFunc {
+//UpdateNicConfig UpdateNicConfig
+func (a *API) UpdateNicConfig() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("update")
-		var serverConfig config.ServerConfig
+		var serverConfig model.ServerConfig
 		vars := mux.Vars(r)
-		mac_address := vars["mac_address"]
-		_, found := api.cfg.Nics[mac_address]
-		if !found {
+		macAddress := vars["mac_address"]
+		_, err := a.nicService.FindServer(macAddress)
+		if err != nil {
 			w.WriteHeader(422) // unprocessable entity
-			w.Write([]byte(fmt.Sprintf("nic %s does not exists", mac_address)))
-			panic(errors.New(fmt.Sprintf("nic %s does not exists", mac_address)))
+			w.Write([]byte(fmt.Sprintf("nic %s does not exists", macAddress)))
+			panic(fmt.Errorf("nic %s does not exists", macAddress))
 		}
 
 		body, err := ioutil.ReadAll(r.Body)
@@ -181,38 +168,57 @@ func (api *API) UpdateNicConfig() http.HandlerFunc {
 				panic(err)
 			}
 		} else {
-			api.cfg.Nics[mac_address] = serverConfig
+			if serverConfig, err = a.nicService.UpdateServer(serverConfig); err != nil {
+				w.WriteHeader(422)
+				w.Write([]byte(fmt.Sprintf("Update failed with %v", err)))
+				return
+			}
 			w.WriteHeader(http.StatusAccepted)
+			if body, err = json.Marshal(&serverConfig); err != nil {
+				w.WriteHeader(422)
+				w.Write([]byte(fmt.Sprintf("Unknown return body %v", serverConfig)))
+				return
+			}
+			w.Write(body)
 		}
 	}
 }
 
-func (api *API) DeleteNic() http.HandlerFunc {
+//DeleteNic DeleteNic
+func (a *API) DeleteNic() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
-		mac_address := vars["mac_address"]
-		_, found := api.cfg.Nics[mac_address]
-		if !found {
+		macAddress := vars["mac_address"]
+		_, err := a.nicService.FindServer(macAddress)
+		if err != nil {
 			w.WriteHeader(422) // unprocessable entity
-			w.Write([]byte(fmt.Sprintf("nic %s does not exists", mac_address)))
-			panic(errors.New(fmt.Sprintf("nic %s does not exists", mac_address)))
+			w.Write([]byte(fmt.Sprintf("nic %s does not exists", macAddress)))
+			panic(fmt.Errorf("nic %s does not exists", macAddress))
 		} else {
-			delete(api.cfg.Nics, mac_address)
+			if err = a.nicService.DeleteServer(macAddress); err != nil {
+				w.WriteHeader(422)
+				return
+			}
 			w.WriteHeader(http.StatusAccepted)
 		}
 	}
 }
 
-func (api *API) DeleteAllNics() http.HandlerFunc {
+//DeleteAllNics DeleteAllNics
+func (a *API) DeleteAllNics() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		api.cfg.Nics = map[string]config.ServerConfig{}
+		if err := a.nicService.DeleteAll(); err != nil {
+			w.WriteHeader(422)
+			return
+		}
 		w.WriteHeader(http.StatusAccepted)
 	}
 }
 
-func (api *API) CreateNicConfig() http.HandlerFunc {
+//CreateNicConfig CreateNicConfig
+func (a *API) CreateNicConfig() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var serverItem ServerItem
+		var serverItem model.ServerConfig
 		body, err := ioutil.ReadAll(r.Body)
 		if err != nil {
 			panic(err)
@@ -228,14 +234,22 @@ func (api *API) CreateNicConfig() http.HandlerFunc {
 				w.WriteHeader(http.StatusBadRequest)
 				w.Write([]byte(err.Error()))
 			} else {
-				serverConfig := config.ServerConfig{serverItem.Ip, serverItem.Hostname, serverItem.Gateway, serverItem.Netmask}
-				api.cfg.Nics[convertLowerCaseDash(serverItem.MacAddress)] = serverConfig
+				serverConfig := model.ServerConfig{0, serverItem.Ip, serverItem.Hostname, serverItem.Gateway, serverItem.Netmask, convertLowerCaseDash(serverItem.MacAddress)}
+				if serverConfig, err = a.nicService.CreateServer(serverConfig); err != nil {
+					w.WriteHeader(422)
+					return
+				}
+				if body, err = json.Marshal(serverConfig); err != nil {
+					w.WriteHeader(422)
+					return
+				}
 				w.WriteHeader(http.StatusAccepted)
+				w.Write(body)
 			}
 		}
 	}
 }
 
-func convertLowerCaseDash(mac_address string) string {
-	return strings.ToLower(util.Colon_To_Dash(mac_address))
+func convertLowerCaseDash(macAddress string) string {
+	return strings.ToLower(util.Colon_To_Dash(macAddress))
 }

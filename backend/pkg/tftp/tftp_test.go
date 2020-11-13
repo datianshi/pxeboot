@@ -2,12 +2,16 @@ package tftp
 
 import (
 	"bytes"
-	"github.com/datianshi/pxeboot/pkg/config"
 	"strings"
 	"testing"
+
+	"github.com/datianshi/pxeboot/pkg/config"
+	"github.com/datianshi/pxeboot/pkg/model"
+	"github.com/datianshi/pxeboot/pkg/nic"
+	"github.com/datianshi/pxeboot/pkg/nic/nicfakes"
 )
 
-var data string = `dhcp_interface: ens224
+var data = `dhcp_interface: ens224
 bind_ip: 172.16.100.2
 gateway: 10.65.101.1
 netmask: 255.255.255.0
@@ -40,7 +44,7 @@ func TestReadBootConfigFile(t *testing.T) {
 	fileName := "/10-00-50-56-82-70-2a/boot.cfg"
 
 	var remoteBuf bytes.Buffer
-	pxeReadHandler(cfg)(fileName, &remoteBuf)
+	pxeReadHandler(cfg, getFakeNicService())(fileName, &remoteBuf)
 
 	real := remoteBuf.String()
 	expected := `bootstate=0
@@ -69,7 +73,7 @@ func TestReadRegularFile(t *testing.T) {
 	fileName := "afile"
 
 	var remoteBuf bytes.Buffer
-	pxeReadHandler(cfg)(fileName, &remoteBuf)
+	pxeReadHandler(cfg, getFakeNicService())(fileName, &remoteBuf)
 
 	real := remoteBuf.String()
 	expected := `this is a file`
@@ -77,4 +81,19 @@ func TestReadRegularFile(t *testing.T) {
 		t.Errorf("%s\n not equal to %s\n", real, expected)
 	}
 
+}
+
+func getFakeNicService() nic.Service {
+	nicService := nicfakes.FakeService{}
+	nicService.GetServersStub = func() ([]model.ServerConfig, error) {
+		return []model.ServerConfig{
+			{
+				MacAddress: "00-50-56-82-70-2a",
+			},
+			{
+				MacAddress: "00-50-56-82-61-7c",
+			},
+		}, nil
+	}
+	return &nicService
 }

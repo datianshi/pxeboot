@@ -2,18 +2,21 @@ package api
 
 import (
 	"fmt"
-	"github.com/datianshi/pxeboot/pkg/config"
-	"github.com/hooklift/iso9660"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/datianshi/pxeboot/pkg/config"
+	"github.com/hooklift/iso9660"
 )
 
+//ImageUploader ImageUploader
 type ImageUploader struct {
-	Cfg *config.Config
+	Cfg config.Config
 }
 
+//UploadHandler UploadHandler
 func (iu *ImageUploader) UploadHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		//max 2GB
@@ -40,7 +43,8 @@ func (iu *ImageUploader) handleError(w http.ResponseWriter, err error) {
 	panic(err)
 }
 
-func (iu *ImageUploader) Upload(r *iso9660.Reader) error{
+//Upload Upload
+func (iu *ImageUploader) Upload(r *iso9660.Reader) error {
 	for {
 		f, err := r.Next()
 		if err == io.EOF {

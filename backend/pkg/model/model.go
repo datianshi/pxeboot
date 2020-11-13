@@ -1,20 +1,24 @@
-package api
+package model
 
 import (
 	"errors"
-	"github.com/spf13/pflag"
 	"net"
+
+	"github.com/spf13/pflag"
 )
 
-type ServerItem struct {
-	Ip string `yaml:"ip" json:"ip"`
-	Hostname string `yaml:"hostname" json:"hostname"`
-	MacAddress string `json:"mac_address"`
-	Gateway string `yaml:"gateway" json:"gateway"`
-	Netmask string `yaml:"netmask" json:"netmask"`
+//ServerConfig Server config
+type ServerConfig struct {
+	ID         int    `yaml:"id" json:"id"`
+	Ip         string `yaml:"ip" json:"ip"`
+	Hostname   string `yaml:"hostname" json:"hostname"`
+	Gateway    string `yaml:"gateway" json:"gateway"`
+	Netmask    string `yaml:"netmask" json:"netmask"`
+	MacAddress string `yaml:"mac_address" json:"mac_address"`
 }
 
-func (s ServerItem) Validate() error {
+//Validate Validate
+func (s ServerConfig) Validate() error {
 	if _, err := net.ParseMAC(s.MacAddress); err != nil {
 		return errors.New("error : Mac address format is not valid")
 	}

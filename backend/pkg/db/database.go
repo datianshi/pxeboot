@@ -5,23 +5,27 @@ import (
 	"fmt"
 
 	"github.com/datianshi/pxeboot/pkg/config"
+	"github.com/datianshi/pxeboot/pkg/model"
 	_ "github.com/lib/pq"
 )
 
+//Database Object
 type Database struct {
-	cfg *config.Config
+	cfg config.Database
 }
 
-func NewDatabase(cfg *config.Config) *Database {
+//NewDatabase Create a New Database Object
+func NewDatabase(cfg config.Database) *Database {
 	return &Database{
 		cfg: cfg,
 	}
 }
 
+//Open connection
 func (db *Database) openConnection() (*sql.DB, error) {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
-		db.cfg.Database.Host, db.cfg.Database.Port, db.cfg.Database.Username, db.cfg.Database.Password, db.cfg.Database.DatabaseName)
+		db.cfg.Host, db.cfg.Port, db.cfg.Username, db.cfg.Password, db.cfg.DatabaseName)
 
 	database, err := sql.Open("postgres", psqlInfo)
 	if err != nil {
@@ -36,7 +40,8 @@ func (db *Database) openConnection() (*sql.DB, error) {
 	return database, nil
 }
 
-func (db *Database) GetServers() ([]config.ServerConfig, error) {
+//GetServers Retrieve All the servers
+func (db *Database) GetServers() ([]model.ServerConfig, error) {
 	var err error
 	var database *sql.DB
 	var rows *sql.Rows
@@ -46,9 +51,9 @@ func (db *Database) GetServers() ([]config.ServerConfig, error) {
 	if rows, err = database.Query("select gateway, hostname, ip, netmask, mac_address from server"); err != nil {
 		return nil, err
 	}
-	var servers []config.ServerConfig
+	var servers []model.ServerConfig
 	for rows.Next() {
-		var server config.ServerConfig
+		var server model.ServerConfig
 		if err = rows.Scan(&server.Gateway, &server.Hostname, &server.Ip, &server.Netmask, &server.MacAddress); err != nil {
 			return nil, err
 		}

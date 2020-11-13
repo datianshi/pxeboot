@@ -1,7 +1,7 @@
 -- +goose Up
 -- SQL in this section is executed when the migration is applied.
 CREATE TABLE SERVER (
-	server_id serial PRIMARY KEY,
+	id serial PRIMARY KEY,
 	mac_address VARCHAR ( 50 ) UNIQUE NOT NULL,
 	ip VARCHAR ( 50 ) NOT NULL,
 	hostname VARCHAR ( 50 ) NOT NULL,

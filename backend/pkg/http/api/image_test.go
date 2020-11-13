@@ -2,15 +2,16 @@ package api_test
 
 import (
 	"fmt"
+	"os"
+	"testing"
+
 	"github.com/datianshi/pxeboot/pkg/config"
 	"github.com/datianshi/pxeboot/pkg/http/api"
 	"github.com/hooklift/iso9660"
-	"os"
-	"testing"
 )
 
-func TestImageUpload(t *testing.T){
-	c := &config.Config{
+func TestImageUpload(t *testing.T) {
+	c := config.Config{
 		RootPath: "./fixture",
 	}
 	imageUploader := &api.ImageUploader{

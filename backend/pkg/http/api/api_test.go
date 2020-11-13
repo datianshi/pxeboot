@@ -2,14 +2,18 @@ package api_test
 
 import (
 	"bytes"
-	"fmt"
-	"github.com/datianshi/pxeboot/pkg/config"
-	"github.com/datianshi/pxeboot/pkg/http/api"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/datianshi/pxeboot/pkg/config"
+	"github.com/datianshi/pxeboot/pkg/http/api"
+	"github.com/datianshi/pxeboot/pkg/model"
+	"github.com/datianshi/pxeboot/pkg/nic"
+	"github.com/datianshi/pxeboot/pkg/nic/nicfakes"
+	"github.com/gorilla/mux"
+	"k8s.io/apimachinery/pkg/util/json"
 )
 
 var data string = `
@@ -44,21 +48,32 @@ func TestUpdateNicConfig(t *testing.T) {
     "gateway": "10.65.101.1",
 	"netmask": "255.255.255.0"
 }`
-	router, cfg, a := setupAPI(t)
+
+	nicService := &nicfakes.FakeService{}
+	nicService.UpdateServerStub = func(n model.ServerConfig) (model.ServerConfig, error) {
+		return n, nil
+	}
+
+	router, a := setupAPI(t, nicService)
 	router.HandleFunc("/api/conf/nic/{mac_address}", a.UpdateNicConfig()).Methods("PUT")
 	r, _ := http.NewRequest("PUT", "/api/conf/nic/00-50-56-82-70-2a", bytes.NewBufferString(requestBody))
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, r)
+
+	if nicService.UpdateServerCallCount() != 1 {
+		t.Errorf("Expect update server to be called once")
+	}
+
 	ret, _ := ioutil.ReadAll(w.Result().Body)
-	fmt.Println(string(ret))
+	var server model.ServerConfig
+	if err := json.Unmarshal(ret, &server); err != nil {
+		t.Errorf("Invalid Response")
+	}
 
 	if w.Result().StatusCode != http.StatusAccepted {
 		t.Errorf("Expected the http status code %d, but got %d", http.StatusAccepted, w.Result().StatusCode)
 	}
-	server, found := cfg.Nics["00-50-56-82-70-2a"]
-	if !found {
-		t.Errorf("New nic config is not created")
-	}
+
 	if server.Ip != "10.65.101.31" {
 		t.Errorf("Expected server update to %s, but got %s", "10.65.101.31", server.Ip)
 	}
@@ -66,7 +81,12 @@ func TestUpdateNicConfig(t *testing.T) {
 }
 
 func TestDeleteNicConfig(t *testing.T) {
-	router, cfg, a := setupAPI(t)
+	nicService := &nicfakes.FakeService{}
+	nicService.DeleteServerStub = func(string) error {
+		return nil
+	}
+
+	router, a := setupAPI(t, nicService)
 	router.HandleFunc("/api/conf/nic/{mac_address}", a.DeleteNic()).Methods("DELETE")
 	r, _ := http.NewRequest("DELETE", "/api/conf/nic/00-50-56-82-70-2a", nil)
 	w := httptest.NewRecorder()
@@ -75,14 +95,19 @@ func TestDeleteNicConfig(t *testing.T) {
 	if w.Result().StatusCode != http.StatusAccepted {
 		t.Errorf("Expected the http status code %d, but got %d", http.StatusAccepted, w.Result().StatusCode)
 	}
-	_, found := cfg.Nics["00-50-56-82-70-2a"]
-	if found {
-		t.Errorf("Expect %s nic config is deleted", "00-50-56-82-70-2a")
+
+	if nicService.DeleteServerCallCount() != 1 {
+		t.Errorf("Expecte Delete Server called once")
 	}
 }
 
 func TestDeleteAllNics(t *testing.T) {
-	router, cfg, a := setupAPI(t)
+	nicService := &nicfakes.FakeService{}
+	nicService.DeleteAllStub = func() error {
+		return nil
+	}
+
+	router, a := setupAPI(t, nicService)
 	router.HandleFunc("/api/conf/deletenics", a.DeleteAllNics()).Methods("DELETE")
 	r, _ := http.NewRequest("DELETE", "/api/conf/deletenics", nil)
 	w := httptest.NewRecorder()
@@ -91,56 +116,78 @@ func TestDeleteAllNics(t *testing.T) {
 	if w.Result().StatusCode != http.StatusAccepted {
 		t.Errorf("Expected the http status code %d, but got %d", http.StatusAccepted, w.Result().StatusCode)
 	}
-	if len(cfg.Nics) != 0 {
-		t.Errorf("Expect to have 0 Nics in config")
+
+	if nicService.DeleteAllCallCount() != 1 {
+		t.Errorf("Expecte Delete Server called once")
 	}
 }
 
-func TestCreateNicConfig(t *testing.T) {
-	requestBody := `
-{
-	"mac_address": 
-	"00:50:A6:83:70:98", 
-	"ip": "10.65.101.31" , 
-	"dhcp_ip": "172.16.100.102", 
-	"hostname": "test-host",
-    "gateway": "10.65.101.1",
-	"netmask": "255.255.255.0"
-}
-`
-	router, cfg, a := setupAPI(t)
-	router.HandleFunc("/api/conf/nic", a.CreateNicConfig()).Methods("POST")
-	r, _ := http.NewRequest("POST", "/api/conf/nic", bytes.NewBufferString(requestBody))
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, r)
-
-	if w.Result().StatusCode != http.StatusAccepted {
-		t.Errorf("Expected the http status code %d, but got %d", http.StatusAccepted, w.Result().StatusCode)
-	}
-	_, found := cfg.Nics["00-50-a6-83-70-98"]
-	if !found {
-		t.Errorf("New nic config is not created")
-	}
-
+func TestCreateNicWithRoundMacAddr(t *testing.T) {
 	requestBodyWithWrongMac := `
 {
-	"mac_address": 
-	"00:50:A6:83:7:98", 
-	"ip": "10.65.101.31" , 
-	"dhcp_ip": "172.16.100.102", 
-	"hostname": "test-host" 
+	"mac_address": "00:50:A6:83:7:98",
+	"ip": "10.65.101.31",
+	"dhcp_ip": "172.16.100.102",
+	"hostname": "test-host"
 }
 `
-	r, _ = http.NewRequest("POST", "/api/conf/nic", bytes.NewBufferString(requestBodyWithWrongMac))
-	w = httptest.NewRecorder()
+	nicService := &nicfakes.FakeService{}
+	nicService.CreateServerStub = func(server model.ServerConfig) (model.ServerConfig, error) {
+		return server, nil
+	}
+	router, a := setupAPI(t, nicService)
+	router.HandleFunc("/api/conf/nic", a.CreateNicConfig()).Methods("POST")
+	r, _ := http.NewRequest("POST", "/api/conf/nic", bytes.NewBufferString(requestBodyWithWrongMac))
+	w := httptest.NewRecorder()
 	router.ServeHTTP(w, r)
 	if w.Result().StatusCode != http.StatusBadRequest {
 		t.Errorf("Expected the http status code %d, but got %d", http.StatusBadRequest, w.Result().StatusCode)
 	}
 }
 
+func TestCreateNicConfig(t *testing.T) {
+	requestBody := `
+{
+	"mac_address": "00:50:A6:83:70:98",
+	"ip": "10.65.101.31" ,
+	"dhcp_ip": "172.16.100.102",
+	"hostname": "test-host",
+    "gateway": "10.65.101.1",
+	"netmask": "255.255.255.0"
+}
+`
+	nicService := &nicfakes.FakeService{}
+	nicService.CreateServerStub = func(server model.ServerConfig) (model.ServerConfig, error) {
+		server.ID = 100
+		return server, nil
+	}
+	router, a := setupAPI(t, nicService)
+	router.HandleFunc("/api/conf/nic", a.CreateNicConfig()).Methods("POST")
+	r, _ := http.NewRequest("POST", "/api/conf/nic", bytes.NewBufferString(requestBody))
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, r)
 
-func setupAPI(t *testing.T) (*mux.Router, *config.Config, *api.API) {
+	if w.Result().StatusCode != http.StatusAccepted {
+		t.Errorf("Expect the http status code %d, but got %d", http.StatusAccepted, w.Result().StatusCode)
+	}
+
+	if nicService.CreateServerCallCount() != 1 {
+		t.Errorf("Expect Create Server called once")
+	}
+
+	ret, _ := ioutil.ReadAll(w.Result().Body)
+	var server model.ServerConfig
+	if err := json.Unmarshal(ret, &server); err != nil {
+		t.Errorf("Invalid Response")
+	}
+
+	if server.ID != 100 {
+		t.Errorf("Expect server id is generated by the server side, but got %d", server.ID)
+	}
+
+}
+
+func setupAPI(t *testing.T, nicService nic.Service) (*mux.Router, *api.API) {
 	router := mux.NewRouter()
 	var buf bytes.Buffer
 	buf.WriteString(data)
@@ -148,6 +195,6 @@ func setupAPI(t *testing.T) (*mux.Router, *config.Config, *api.API) {
 	if err != nil {
 		t.Fatalf("Can not process the config %v", err)
 	}
-	a := api.NewAPI(cfg)
-	return router, cfg, a
+	a := api.NewAPI(cfg, nicService)
+	return router, a
 }

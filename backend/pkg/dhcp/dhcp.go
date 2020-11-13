@@ -2,30 +2,33 @@ package dhcp
 
 import (
 	"fmt"
+	"log"
+	"net"
+
 	"github.com/datianshi/pxeboot/pkg/config"
-	"github.com/datianshi/pxeboot/pkg/http/kickstart"
+	"github.com/datianshi/pxeboot/pkg/nic"
 	"github.com/datianshi/pxeboot/pkg/util"
 	"github.com/insomniacslk/dhcp/dhcpv4"
 	"github.com/insomniacslk/dhcp/dhcpv4/server4"
-	"log"
-	"net"
 )
 
-type DhcpServer struct{
-	k kickstart.Kickstart
-	c config.Config
+//Server Server to handle dhcp request
+type Server struct {
+	nicService nic.Service
+	cfg        config.Config
+	pool       *ServerPool
 }
 
-func handleDHCP(cfg *config.Config, pool *ServerPool) server4.Handler {
+func (s *Server) handleDHCP() server4.Handler {
 	return func(conn net.PacketConn, peer net.Addr, m *dhcpv4.DHCPv4) {
 		log.Print(m.Summary())
-		client_mac := m.ClientHWAddr.String()
-		_, found := cfg.Nics[util.Colon_To_Dash(client_mac)]
-		if !found {
-			log.Println(fmt.Sprintf("No DHCP Offering for mac address: %s", client_mac))
+		clientMAC := m.ClientHWAddr.String()
+		nicConfig, err := s.nicService.FindServer(util.Colon_To_Dash(clientMAC))
+		if err != nil {
+			log.Println(fmt.Sprintf("No DHCP Offering for mac address: %s", clientMAC))
 			return
 		}
-		replyIp, err := pool.AssignIP(m.ClientHWAddr)
+		replyIP, err := s.pool.AssignIP(m.ClientHWAddr)
 		if err != nil {
 			log.Printf("Can not assign IP error %s", err.Error())
 			return
@@ -33,20 +36,22 @@ func handleDHCP(cfg *config.Config, pool *ServerPool) server4.Handler {
 		ret, _ := dhcpv4.New(
 			dhcpv4.WithReply(m),
 			dhcpv4.WithNetmask(net.IPv4Mask(255, 255, 255, 0)),
-			dhcpv4.WithServerIP(net.ParseIP(cfg.BindIP)),
-			dhcpv4.WithLeaseTime(uint32(cfg.LeaseTime)),
-			dhcpv4.WithYourIP(replyIp),
+			dhcpv4.WithServerIP(net.ParseIP(nicConfig.Ip)),
+			dhcpv4.WithLeaseTime(uint32(s.cfg.LeaseTime)),
+			dhcpv4.WithYourIP(replyIP),
 		)
 		//TFTP Server
-		ret.Options[66] = []byte(cfg.BindIP)
+		ret.Options[66] = []byte(s.cfg.BindIP)
 		//BootFileName
-		ret.Options[67] = []byte(cfg.BootFile)
+		ret.Options[67] = []byte(s.cfg.BootFile)
 		//TFTP Server
 		log.Print(ret.Summary())
 		conn.WriteTo(ret.ToBytes(), peer)
 	}
 }
-func Start(cfg *config.Config) {
+
+//Start Start DHCP server
+func Start(cfg config.Config, nicService nic.Service) {
 	var port int
 	if cfg.DHCPServerPort != 0 {
 		port = cfg.DHCPServerPort
@@ -61,7 +66,12 @@ func Start(cfg *config.Config) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	server, err := server4.NewServer(cfg.DHCPInterface, &laddr, handleDHCP(cfg, pool))
+	dhcpServer := Server{
+		nicService: nicService,
+		cfg:        cfg,
+		pool:       pool,
+	}
+	server, err := server4.NewServer(cfg.DHCPInterface, &laddr, dhcpServer.handleDHCP())
 	if err != nil {
 		log.Fatal(err)
 	}
